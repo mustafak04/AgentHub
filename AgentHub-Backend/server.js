@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
       const systemMessage = getAgentSystemMessage(agentId);
   
       // Gemini 1.5 Flash modeli (ücretsiz ve hızlı)
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   
       // Prompt oluştur
       const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
@@ -60,7 +60,7 @@ app.post('/api/coordinate', async (req, res) => {
       Mevcut agentlar: Hava Durumu Agent, Hesap Makinesi Agent, Çeviri Agent, Haber Agent.
       Kullanıcının isteğine göre uygun cevabı ver ve hangi agentın devreye girdiğini belirt.`;
   
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
   
       const result = await model.generateContent(prompt);
