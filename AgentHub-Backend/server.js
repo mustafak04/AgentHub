@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const axios = require('axios');
+const { getAgentPrompt } = require('./config/agentPrompts');
 
 // Express uygulaması oluştur
 const app = express();
@@ -20,30 +21,24 @@ app.get('/', (req, res) => {
     res.json({ message: 'AgentHub Backend (Gemini API) çalışıyor!' });
   });
   
-  // Bireysel mod için agent endpoint'i
-  app.post('/api/agent', async (req, res) => {
-    try {
-      const { agentId, agentName, userMessage } = req.body;
-  
-      console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
+// Bireysel mod endpoint
+app.post('/api/agent', async (req, res) => {
+  try {
+    const { agentId, agentName, userMessage } = req.body;
 
-      // Agent'a özel sistem mesajı
-      const systemMessage = getAgentSystemMessage(agentId);
-  
-      // Gemini 2.5 Flash modeli (ücretsiz ve hızlı)
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  
-      // Prompt oluştur
-      const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-  
-      // Gemini'ye istek gönder
-      console.log('🤖 Gemini API çağrısı yapılıyor...');
-      const result = await model.generateContent(prompt);
-      let aiResponse = result.response.text();
+    console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
 
-      console.log(`✅ Cevap alındı: ${aiResponse.substring(0, 50)}...`);
+    const systemMessage = getAgentPrompt(agentId);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
 
-      // ============ HAVA DURUMU AGENT (agentId === '1') ============
+    console.log('🤖 Gemini API çağrısı yapılıyor...');
+    const result = await model.generateContent(prompt);
+    let aiResponse = result.response.text();
+
+    console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 100)}...`);
+
+    // ============ HAVA DURUMU AGENT (agentId === '1') ============
     if (agentId === '1' && aiResponse.includes('[WEATHER:')) {
       const cityMatch = aiResponse.match(/\[WEATHER:(.*?)\]/);
       if (cityMatch) {
@@ -81,81 +76,125 @@ app.get('/', (req, res) => {
           console.error('❌ Hava durumu hatası:', weatherError.message);
           
           if (weatherError.response?.status === 404) {
-            aiResponse = `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı. Lütfen şehir adını kontrol edin veya daha büyük bir şehir adı kullanın.`;
+            aiResponse = `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı.`;
           } else if (weatherError.response?.status === 401) {
-            aiResponse = 'API anahtarı geçersiz. Lütfen sistem yöneticisine başvurun.';
+            aiResponse = 'Hava durumu API anahtarı geçersiz.';
           } else {
-            aiResponse = 'Üzgünüm, hava durumu bilgisi alınamadı. Lütfen tekrar deneyin.';
+            aiResponse = 'Üzgünüm, hava durumu bilgisi alınamadı.';
           }
         }
       }
     }
 
-      // ============ HABER AGENT (agentId === '4') ============
+    // ============ HABER AGENT (agentId === '4') ============
     if (agentId === '4' && aiResponse.includes('[NEWS:')) {
-      const newsMatch = aiResponse.match(/\[NEWS:(.*?)\]/);
+      const newsMatch = aiResponse.match(/\[NEWS:(.*?)\|(.*?)\|(.*?)\]/);
+      
       if (newsMatch) {
         const topic = newsMatch[1].trim();
-        
-        console.log(`📰 Haber API'sine yönlendiriliyor: ${topic}`);
+        const language = newsMatch[2].trim();
+        const country = newsMatch[3].trim();
 
+        console.log(`📰 PARSE SONUCU - Konu: "${topic}", Dil: "${language}", Ülke: "${country}"`);
+      
         try {
           const NEWS_API_KEY = process.env.NEWS_API_KEY;
-          
-          if (!NEWS_API_KEY) {
-            throw new Error('NEWS_API_KEY tanımlı değil');
-          }
+          if (!NEWS_API_KEY) throw new Error('NEWS_API_KEY tanımlı değil');
+        
+          let newsData = null;
+          let usedEndpoint = '';
 
-          let newsUrl;
-          if (topic.toLowerCase() === 'genel') {
-            // Genel Türkiye haberleri
-            newsUrl = `https://newsapi.org/v2/top-headlines?country=tr&apiKey=${NEWS_API_KEY}&pageSize=5`;
-          } else {
-            // Belirli konuda haberler (Türkçe)
-            newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(topic)}&language=tr&sortBy=publishedAt&apiKey=${NEWS_API_KEY}&pageSize=5`;
-          }
-
-          console.log(`📡 News API isteği: ${newsUrl}`);
-
-          const newsResponse = await axios.get(newsUrl);
-          const newsData = newsResponse.data;
-
-          if (newsData.articles && newsData.articles.length > 0) {
-            let newsText = `📰 **${topic === 'genel' ? 'Güncel Haberler' : topic.charAt(0).toUpperCase() + topic.slice(1) + ' Haberleri'}**\n\n`;
+          // AŞAMA 1: Önce top-headlines dene (global hariç)
+          if (country !== 'global') {
+            console.log(`🏳️ AŞAMA 1: /v2/top-headlines deneniyor (country=${country})`);
             
-            newsData.articles.slice(0, 5).forEach((article, index) => {
-              newsText += `${index + 1}. **${article.title}**\n`;
-              if (article.description) {
-                newsText += `   ${article.description.substring(0, 120)}...\n`;
+            const topHeadlinesUrl = topic.toLowerCase() === 'genel'
+              ? `https://newsapi.org/v2/top-headlines?country=${country}&apiKey=${NEWS_API_KEY}&pageSize=5`
+              : `https://newsapi.org/v2/top-headlines?country=${country}&q=${encodeURIComponent(topic)}&apiKey=${NEWS_API_KEY}&pageSize=5`;
+            
+            console.log(`📡 İstek 1: ${topHeadlinesUrl}`);
+            
+            try {
+              const response = await axios.get(topHeadlinesUrl);
+              if (response.data.articles && response.data.articles.length > 0) {
+                newsData = response.data;
+                usedEndpoint = 'top-headlines';
+                console.log(`✅ ${newsData.articles.length} haber bulundu (top-headlines)`);
+              } else {
+                console.log(`⚠️ top-headlines'da haber yok, everything deneniyor...`);
               }
-              newsText += `   📅 ${new Date(article.publishedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}\n`;
-              newsText += `   🔗 ${article.source.name}\n\n`;
+            } catch (error) {
+              console.log(`⚠️ top-headlines hatası: ${error.message}, everything deneniyor...`);
+            }
+          }
+
+          // AŞAMA 2: top-headlines boşsa veya global ise everything dene
+          if (!newsData) {
+            console.log(`🌐 AŞAMA 2: /v2/everything deneniyor (language=${language})`);
+            
+            const everythingUrl = topic.toLowerCase() === 'genel'
+              ? `https://newsapi.org/v2/everything?language=${language}&sortBy=publishedAt&apiKey=${NEWS_API_KEY}&pageSize=5`
+              : `https://newsapi.org/v2/everything?q=${encodeURIComponent(topic)}&language=${language}&sortBy=publishedAt&apiKey=${NEWS_API_KEY}&pageSize=5`;
+            
+            console.log(`📡 İstek 2: ${everythingUrl}`);
+            
+            const response = await axios.get(everythingUrl);
+            newsData = response.data;
+            usedEndpoint = 'everything';
+            console.log(`📊 ${newsData.articles?.length || 0} haber bulundu (everything)`);
+          }
+        
+          // Sonuçları işle
+          if (newsData && newsData.articles && newsData.articles.length > 0) {
+            let newsDataText = '';
+            newsData.articles.slice(0, 5).forEach((article, i) => {
+              newsDataText += `Haber ${i + 1}:\nBaşlık: ${article.title}\nAçıklama: ${article.description || 'Yok'}\nTarih: ${article.publishedAt}\nKaynak: ${article.source.name}\n\n`;
             });
 
-            aiResponse = newsText.trim();
-            console.log(`✅ ${newsData.articles.length} haber bulundu`);
+            const formatPrompt = `Ham haber verilerini kullanıcı dostu formatta düzenle.
 
-          } else {
-            aiResponse = `Üzgünüm, "${topic}" konusunda haber bulunamadı. Farklı bir konu deneyin.`;
-            console.log('⚠️ Haber bulunamadı');
-          }
+BİLGİLER:
+- Konu: ${topic}
+- Kullanıcının dili: ${language} (MUTLAKA bu dilde yanıt ver!)
+- Ülke: ${country === 'global' ? 'Dünya' : country.toUpperCase()}
 
-        } catch (newsError) {
-          console.error('❌ Haber API hatası:', newsError.response?.status, newsError.message);
+KURALLAR:
+1. Kullanıcının dilinde (${language}) yanıt ver
+2. Başlık ekle (emoji: 📰 veya 🌍)
+3. Her haberi numaralandır
+4. Format: Başlık, özet (max 120 kar), tarih, kaynak
+5. Emoji kullan: 📅, 🔗
+
+HABERLER:
+${newsDataText}`;
+
+            const formatModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const formatResult = await formatModel.generateContent(formatPrompt);
+            aiResponse = formatResult.response.text();
+
+            console.log(`✅ FORMATLANDIRMA TAMAM (kaynak: ${usedEndpoint})`);
           
-          if (newsError.response?.status === 401) {
-            aiResponse = 'Haber API anahtarı geçersiz. Lütfen sistem yöneticisine başvurun.';
-          } else if (newsError.response?.status === 426) {
-            aiResponse = 'News API ücretsiz planı yalnızca HTTPS destekler. Lütfen sistem yöneticisine başvurun.';
-          } else if (newsError.response?.status === 429) {
-            aiResponse = 'Günlük haber sorgulama limitine ulaşıldı. Lütfen daha sonra tekrar deneyin.';
           } else {
-            aiResponse = 'Üzgünüm, haber bilgisi alınamadı. Lütfen tekrar deneyin.';
+            console.log('❌ HER İKİ ENDPOINT\'TE DE HABER BULUNAMADI');
+            
+            const noNewsPrompt = `Kullanıcı "${topic}" hakkında haber istedi ama bulunamadı. Dili: ${language}. Kısa ve nazik mesaj yaz.`;
+            const noNewsModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const noNewsResult = await noNewsModel.generateContent(noNewsPrompt);
+            aiResponse = noNewsResult.response.text();
           }
+        
+        } catch (newsError) {
+          console.error('❌ GENEL HATA:', newsError.message);
+
+          const msgs = {
+            'tr': 'Haber servisi kullanılamıyor.',
+            'en': 'News service unavailable.',
+          };
+          aiResponse = msgs[language] || msgs['en'];
         }
       }
     }
-  
+
     res.json({
       success: true,
       agentName: agentName,
@@ -172,232 +211,40 @@ app.get('/', (req, res) => {
   }
 });
 
-  // Koordine mod için endpoint
+// Koordine mod endpoint
 app.post('/api/coordinate', async (req, res) => {
-    try {
-      const { userMessage } = req.body;
-  
-      const systemMessage = `Sen bir koordinatör yapay zeka asistanısın. Kullanıcının isteğini analiz et ve hangi agent(lar)ın işi yapması gerektiğini belirle. 
-      Mevcut agentlar: Hava Durumu Agent, Hesap Makinesi Agent, Çeviri Agent, Haber Agent.
-      Kullanıcının isteğine göre uygun cevabı ver ve hangi agentın devreye girdiğini belirt.`;
-  
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-      const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-  
-      const result = await model.generateContent(prompt);
-      const aiResponse = result.response.text();
-  
-      res.json({
-        success: true,
-        response: aiResponse,
-      });
-    } catch (error) {
-      console.error('Hata:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Bir hata oluştu: ' + error.message,
-      });
-    }
-  });
-
-  // Her agent için sistem mesajı belirleme fonksiyonu
-function getAgentSystemMessage(agentId) {
-    const agentMessages = {
-      '1': `Sen bir hava durumu asistanısın. Kullanıcı sana bir şehir veya ilçe adı söylediğinde, önce şehir adını DOĞRU formata çevir, sonra şu formatta yanıt ver: [WEATHER:şehir_adı]
-
-ÖNEMLİ KURALLAR:
-1. Şehir/ilçe adlarını bulundukları ülkenin diline uygun karakterlerle yaz
-2. Yanlış yazımları düzelt ve en yakın şehir/ilçe adını bul
-3. İl ve ilçe birlikte verilirse, sadece ilçe adını al
-4. İlk harfi büyük, diğerleri küçük yaz
-
-ÖRNEKLER:
-- "kutahya simav" -> [WEATHER:Simav]
-- "izmir cigli" -> [WEATHER:Çiğli]
-- "Ciglide" -> [WEATHER:Çiğli]
-- "ciglide" -> [WEATHER:Çiğli]
-- "ankara cankaya" -> [WEATHER:Çankaya]
-- "istanbul" -> [WEATHER:İstanbul]
-- "izmır" -> [WEATHER:İzmir]
-- "eskisehir" -> [WEATHER:Eskişehir]
-- "konya karatay" -> [WEATHER:Karatay]
-- "bursa nilufer" -> [WEATHER:Nilüfer]
-
-YAZI HATALARI İÇİN:
-- "cilgi" veya "cigli" -> [WEATHER:Çiğli]
-- "izmit" -> [WEATHER:İzmit]
-- "kutahya" -> [WEATHER:Kütahya]
-
-Eğer kullanıcı şehir adı söylemezse, yanıtla: "Hava durumunu öğrenmek istediğiniz şehir adını belirtmelisiniz".`,
-      '2': 'Sen bir hesap makinesi asistanısın. Matematiksel hesaplamalar yap ve sonucu açıkla.',
-      '3': 'Sen bir çeviri asistanısın. Diller arası çeviri yap ve çevirinin doğru olduğundan emin ol.',
-      '4': `Sen bir haber asistanısın. 
-Kullanıcı sana güncel haberler veya belirli bir konuyla ilgili haberler sorduğunda, şu formatta yanıt ver: [NEWS:konu]
-
-KURALLAR:
-1. Konu tek kelime veya kısa ifade olmalı
-2. Türkçe karakterler kullan
-3. Eğer konu belirtilmezse, genel haberler için "genel" yaz
-
-ÖRNEKLER:
-- "güncel haberler neler?" -> [NEWS:genel]
-- "spor haberleri" -> [NEWS:spor]
-- "teknoloji haberleri" -> [NEWS:teknoloji]
-- "ekonomi" -> [NEWS:ekonomi]
-- "türkiye haberleri" -> [NEWS:türkiye]
-
-Eğer kullanıcı konu belirtmezse, hangi konuda haber istediğini sor.`,
-    };
-    return agentMessages[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
-  }
-
-  // Hava durumu endpoint'i (Gerçek API entegrasyonu)
-app.post('/api/agent', async (req, res) => {
   try {
-    const { agentId, agentName, userMessage } = req.body;
+    const { userMessage } = req.body;
 
-    console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
+    console.log(`📥 Koordine mod isteği - Mesaj: ${userMessage}`);
 
-    const systemMessage = getAgentSystemMessage(agentId);
+    const systemMessage = `Sen bir koordinatör yapay zeka asistanısın. Kullanıcının isteğini analiz et ve hangi agent(lar)ın işi yapması gerektiğini belirle. 
+    Mevcut agentlar: Hava Durumu Agent, Hesap Makinesi Agent, Çeviri Agent, Haber Agent.
+    Kullanıcının isteğine göre uygun cevabı ver ve hangi agentın devreye girdiğini belirt.`;
+
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
 
-    console.log('🤖 Gemini API çağrısı yapılıyor...');
     const result = await model.generateContent(prompt);
-    let aiResponse = result.response.text();
+    const aiResponse = result.response.text();
 
-    console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 50)}...`);
-
-    // HAVA DURUMU AGENT (agentId === '1')
-    if (agentId === '1' && aiResponse.includes('[WEATHER:')) {
-      const cityMatch = aiResponse.match(/\[WEATHER:(.*?)\]/);
-      if (cityMatch) {
-        const city = cityMatch[1].trim();
-        
-        console.log(`🌤️ Hava durumu API'sine yönlendiriliyor: ${city}`);
-
-        try {
-          const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-          
-          if (!WEATHER_API_KEY) {
-            throw new Error('WEATHER_API_KEY tanımlı değil');
-          }
-
-          const weatherResponse = await axios.get(
-            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=metric&lang=tr`
-          );
-
-          const weatherData = weatherResponse.data;
-
-          aiResponse = `
-📍 **${weatherData.name}, ${weatherData.sys.country}**
-
-🌡️ Sıcaklık: ${weatherData.main.temp}°C (Hissedilen: ${weatherData.main.feels_like}°C)
-☁️ Durum: ${weatherData.weather[0].description}
-💧 Nem: ${weatherData.main.humidity}%
-💨 Rüzgar: ${weatherData.wind.speed} m/s
-🌅 Gün doğumu: ${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-🌇 Gün batımı: ${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-          `.trim();
-
-          console.log('✅ Hava durumu bilgisi başarıyla alındı');
-
-        } catch (weatherError) {
-          console.error('❌ Hava durumu hatası:', weatherError.message);
-          
-          if (weatherError.response?.status === 404) {
-            aiResponse = `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı. Lütfen şehir adını kontrol edin.`;
-          } else if (weatherError.response?.status === 401) {
-            aiResponse = 'API anahtarı geçersiz. Lütfen sistem yöneticisine başvurun.';
-          } else {
-            aiResponse = 'Üzgünüm, hava durumu bilgisi alınamadı. Lütfen tekrar deneyin.';
-          }
-        }
-      }
-    }
-
-    // HABER AGENT (agentId === '4')
-    if (agentId === '4' && aiResponse.includes('[NEWS:')) {
-      const newsMatch = aiResponse.match(/\[NEWS:(.*?)\]/);
-      if (newsMatch) {
-        const topic = newsMatch[1].trim();
-        
-        console.log(`📰 Haber API'sine yönlendiriliyor: ${topic}`);
-
-        try {
-          const NEWS_API_KEY = process.env.NEWS_API_KEY;
-          
-          if (!NEWS_API_KEY) {
-            throw new Error('NEWS_API_KEY tanımlı değil');
-          }
-
-          let newsUrl;
-          if (topic.toLowerCase() === 'genel') {
-            newsUrl = `https://newsapi.org/v2/top-headlines?country=tr&apiKey=${NEWS_API_KEY}&pageSize=5`;
-          } else {
-            newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(topic)}&language=tr&sortBy=publishedAt&apiKey=${NEWS_API_KEY}&pageSize=5`;
-          }
-
-          const newsResponse = await axios.get(newsUrl);
-          const newsData = newsResponse.data;
-
-          if (newsData.articles && newsData.articles.length > 0) {
-            let newsText = `📰 **${topic === 'genel' ? 'Güncel Haberler' : topic.charAt(0).toUpperCase() + topic.slice(1) + ' Haberleri'}**\n\n`;
-            
-            newsData.articles.slice(0, 5).forEach((article, index) => {
-              newsText += `${index + 1}. **${article.title}**\n`;
-              if (article.description) {
-                newsText += `   ${article.description.substring(0, 100)}...\n`;
-              }
-              newsText += `   📅 ${new Date(article.publishedAt).toLocaleDateString('tr-TR')}\n`;
-              newsText += `   🔗 ${article.source.name}\n\n`;
-            });
-
-            aiResponse = newsText.trim();
-            console.log('✅ Haber bilgisi başarıyla alındı');
-
-          } else {
-            aiResponse = `Üzgünüm, "${topic}" konusunda haber bulunamadı.`;
-          }
-
-        } catch (newsError) {
-          console.error('❌ Haber API hatası:', newsError.message);
-          
-          if (newsError.response?.status === 401) {
-            aiResponse = 'API anahtarı geçersiz. Lütfen sistem yöneticisine başvurun.';
-          } else if (newsError.response?.status === 429) {
-            aiResponse = 'Günlük haber sorgulama limitine ulaşıldı. Lütfen daha sonra tekrar deneyin.';
-          } else {
-            aiResponse = 'Üzgünüm, haber bilgisi alınamadı. Lütfen tekrar deneyin.';
-          }
-        }
-      }
-    }
+    console.log(`✅ Koordine cevap alındı`);
 
     res.json({
       success: true,
-      agentName: agentName,
       response: aiResponse,
     });
   } catch (error) {
-    console.error('❌ Hava durumu hatası:', error.message);
-
-    let errorMessage = 'Hava durumu bilgisi alınamadı.';
+    console.error('❌ HATA DETAYI:', error);
     
-    if (error.response?.status === 404) {
-      errorMessage = 'Şehir bulunamadı. Lütfen şehir adını kontrol edin.';
-    } else if (error.response?.status === 401) {
-      errorMessage = 'API anahtarı geçersiz. Lütfen API anahtarınızı kontrol edin.';
-    }
-
     res.status(500).json({
       success: false,
-      error: errorMessage,
+      error: error.message || 'Bir hata oluştu',
     });
   }
 });
-  // Sunucuyu başlat
+
 app.listen(PORT, () => {
-    console.log(`✅ Sunucu http://localhost:${PORT} adresinde çalışıyor`);
-    console.log(`📡 Gemini API bağlantısı hazır`);
-  });
+  console.log(`✅ Sunucu http://localhost:${PORT} adresinde çalışıyor`);
+  console.log(`📡 Gemini API bağlantısı hazır`);
+});
