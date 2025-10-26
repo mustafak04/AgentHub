@@ -1,12 +1,12 @@
 import { useRouter } from "expo-router";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-// Agent verileri (şimdilik sabit, ileride API'den gelecek)
 const agents = [
   { id: "1", name: "Hava Durumu Agent", description: "Hava durumu bilgisi sağlar", emoji: "🌤️", color: "#FF9500" },
   { id: "2", name: "Hesap Makinesi Agent", description: "Matematiksel hesaplamalar yapar", emoji: "🔢", color: "#5856D6" },
   { id: "3", name: "Çeviri Agent", description: "Diller arası çeviri yapar", emoji: "🌍", color: "#32ADE6" },
   { id: "4", name: "Haber Agent", description: "Güncel haberleri getirir", emoji: "📰", color: "#FF2D55" },
+  { id: '5', name: 'Wikipedia Agent', description: "Wikipedia özeti sağlar", emoji: '📚', color: '#9013FE' },
 ];
 
 export default function Individual() {
