@@ -362,3 +362,5 @@ Yanıtı JSON formatında ver:
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Sunucu port ${PORT} üzerinde çalışıyor`);
 });
+
+module.exports=app; 
