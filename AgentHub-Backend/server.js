@@ -209,6 +209,69 @@ app.post('/api/agent', async (req, res) => {
       }
     }
 
+    // ============ DÖVİZ KURU AGENT (agentId === '6') ============
+    if (agentId === '6' && aiResponse.includes('[EXCHANGE:')) {
+      const match = aiResponse.match(/\[EXCHANGE:(.*?)\|(.*?)\]/);
+      if (!match) return;
+
+      const fromCurrency = match[1].trim().toUpperCase();
+      const toCurrency = match[2].trim().toUpperCase();
+
+      console.log(`💱 Döviz kuru isteği: ${fromCurrency} → ${toCurrency}`);
+
+      try {
+        const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY;
+        if (!EXCHANGE_RATE_API_KEY) throw new Error('EXCHANGE_RATE_API_KEY tanımlı değil');
+
+        const url = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/pair/${fromCurrency}/${toCurrency}`;
+        console.log(`📡 ExchangeRate API isteği: ${url}`);
+
+        const response = await axios.get(url);
+
+        if (response.data.result === 'success') {
+          const rate = response.data.conversion_rate;
+          const lastUpdate = new Date(response.data.time_last_update_unix * 1000).toLocaleString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          aiResponse = `
+💱 **GÜNCEL DÖVİZ KURU**
+
+${fromCurrency} → ${toCurrency}
+**1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}**
+
+📊 **Örnek Çevrimler:**
+• 10 ${fromCurrency} = ${(rate * 10).toFixed(2)} ${toCurrency}
+• 100 ${fromCurrency} = ${(rate * 100).toFixed(2)} ${toCurrency}
+• 1000 ${fromCurrency} = ${(rate * 1000).toFixed(2)} ${toCurrency}
+
+🕐 Son Güncelleme: ${lastUpdate}
+          `.trim();
+
+          console.log(`✅ Döviz kuru başarıyla alındı: 1 ${fromCurrency} = ${rate} ${toCurrency}`);
+
+        } else {
+          console.log('⚠️ Döviz kuru bulunamadı');
+          aiResponse = `Üzgünüm, "${fromCurrency}" → "${toCurrency}" döviz kuru bilgisi bulunamadı. Lütfen para birimi kodlarını kontrol edin.`;
+        }
+
+      } catch (exchangeError) {
+        console.error('❌ Döviz kuru hatası:', exchangeError.message);
+        
+        if (exchangeError.response?.status === 404) {
+          aiResponse = `Üzgünüm, "${fromCurrency}" veya "${toCurrency}" para birimi tanınmıyor.`;
+        } else if (exchangeError.response?.status === 401) {
+          aiResponse = 'Döviz kuru API anahtarı geçersiz.';
+        } else {
+          aiResponse = 'Üzgünüm, döviz kuru bilgisi şu anda alınamıyor.';
+        }
+      }
+    }    
+
     res.json({
       success: true,
       agentName: agentName,

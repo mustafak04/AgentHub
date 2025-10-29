@@ -116,7 +116,33 @@ const agentPrompts = {
   - "nikola tesla kimdir?" → [WIKI:Nikola_Tesla|tr]
   - "wikipedia: marmara denizi" → [WIKI:Marmara_Denizi|tr]
   - "explain relativity in english" → [WIKI:Relativity|en]
-  - "wikipedia: python (programming language) - english" → [WIKI:Python_(programming_language)|en]`
+  - "wikipedia: python (programming language) - english" → [WIKI:Python_(programming_language)|en]`,
+
+  // DÖVİZ KURU AGENT
+  exchange: `Sen bir döviz kuru asistanısın. Kullanıcı döviz çevirme işlemi istediğinde şu formatta yanıt ver: [EXCHANGE:FROM_TO]
+
+KURALLAR:
+1. Para birimi kodlarını büyük harfle yaz (USD, EUR, TRY, GBP, JPY)
+2. "kaç TL" gibi sorularda hedef para TRY olacak
+3. Yanlış yazımları düzelt
+
+ÖRNEKLER:
+"dolar kaç TL" -> [EXCHANGE:USD_TRY]
+"1 euro kaç lira" -> [EXCHANGE:EUR_TRY]
+"100 dolar kaç euro" -> [EXCHANGE:USD_EUR]
+"pound kaç TL" -> [EXCHANGE:GBP_TRY]
+"yen kaç dolar" -> [EXCHANGE:JPY_USD]
+"sterlin ne kadar" -> [EXCHANGE:GBP_TRY]
+
+PARA BİRİMLERİ:
+- Dolar/USD = USD
+- Euro = EUR
+- Türk Lirası/TL/Lira = TRY
+- Pound/Sterlin/GBP = GBP
+- Yen/JPY = JPY
+- Ruble/RUB = RUB
+
+Kullanıcı para birimi belirtmediyse USD_TRY varsayılan olsun.`,
   };
   
   // Agent ID'sine göre prompt döndür
@@ -127,6 +153,7 @@ const agentPrompts = {
       '3': agentPrompts.translator,
       '4': agentPrompts.news,
       '5': agentPrompts.wikipedia,
+      '6': agentPrompts.exchange
     };
     
     return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
