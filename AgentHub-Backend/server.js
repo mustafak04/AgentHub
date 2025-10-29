@@ -18,7 +18,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Test endpoint'i - Sunucunun çalıştığını kontrol etmek için
 app.get('/', (req, res) => {
-    res.json({ message: 'AgentHub Backend (Gemini API) çalışıyor!' });
+    res.json({ message: 'AgentHub Backend çalışıyor!' });
   });
   
 // Bireysel mod endpoint

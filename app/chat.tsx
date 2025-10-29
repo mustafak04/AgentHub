@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Backend URL'si
-const BACKEND_URL = "http://192.168.1.185:3000"; 
+const BACKEND_URL = "https://agenthub-phi.vercel.app"; 
 export default function Chat() {
     // URL'den gelen parametreleri al (agentId ve agentName)
     const { agentId, agentName } = useLocalSearchParams();
