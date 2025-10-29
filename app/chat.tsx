@@ -1,22 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Backend URL'si
-const BACKEND_URL = "http://192.168.92.1:3000"; 
+const BACKEND_URL = "http://192.168.1.185:3000"; 
 export default function Chat() {
     // URL'den gelen parametreleri al (agentId ve agentName)
     const { agentId, agentName } = useLocalSearchParams();
-    
+
+    const userId = auth().currentUser?.uid;
+
     // Mesajları saklamak için state
     const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
     const [inputText, setInputText] = useState("");
     const [loading, setLoading] = useState(false); // Yükleniyor durumu
 
-    // Sohbet geçmişi için benzersiz anahtar
-    const STORAGE_KEY = `chat_history_agent_${agentId}`;
+    // Kullanıcı bazlı sohbet geçmişi anahtarı
+    const STORAGE_KEY = `user_${userId}_chat_history_agent_${agentId}`;
 
     // Uygulama açıldığında sohbet geçmişini yükle
     useEffect(() => {

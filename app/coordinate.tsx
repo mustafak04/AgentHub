@@ -3,7 +3,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const BACKEND_URL = "http://192.168.92.1:3000";
+const BACKEND_URL = "http://192.168.1.185:3000";
 const STORAGE_KEY = "chat_history_coordinate";
 export default function Coordinate() {
   const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);

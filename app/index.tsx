@@ -1,107 +1,171 @@
-import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import auth from '@react-native-firebase/auth';
+import { Link, router } from 'expo-router';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function Index() {
-  const router = useRouter();
-  
+export default function HomeScreen() {
+  const user = auth().currentUser;
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Çıkış Yap',
+      'Hesabından çıkmak istediğine emin misin?',
+      [
+        {
+          text: 'İptal',
+          style: 'cancel',
+        },
+        {
+          text: 'Çıkış Yap',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await auth().signOut();
+              // @ts-ignore
+              router.replace('/login');
+            } catch (error) {
+              console.error('Çıkış hatası:', error);
+              Alert.alert('Hata', 'Çıkış yapılamadı');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* Kullanıcı Bilgisi Kartı */}
+      <View style={styles.userCard}>
+        <View style={styles.userInfo}>
+          <Text style={styles.welcomeText}>👋 Hoş Geldin!</Text>
+          <Text style={styles.emailText}>{user?.email}</Text>
+        </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>🚪 Çıkış</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Ana Sayfa İçeriği */}
+      <View style={styles.content}>
         <Text style={styles.title}>🤖 AgentHub</Text>
-        <Text style={styles.subtitle}>Yapay Zeka Agent Yönetim Platformu</Text>
-      </View>
+        <Text style={styles.subtitle}>Yapay Zeka Agent'larınız</Text>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[styles.modeButton, styles.individualButton]} 
-          onPress={() => router.push("/individual")}
-        >
-          <Text style={styles.buttonEmoji}>👤</Text>
-          <Text style={styles.buttonTitle}>Bireysel Mod</Text>
-          <Text style={styles.buttonDescription}>Tek bir agent ile çalış</Text>
-        </TouchableOpacity>
+        <View style={styles.cardContainer}>
+          <Link href="/individual" asChild>
+            <TouchableOpacity style={styles.card}>
+              <Text style={styles.cardIcon}>👤</Text>
+              <Text style={styles.cardTitle}>Bireysel Mod</Text>
+              <Text style={styles.cardDescription}>
+                Tek bir agent ile sohbet et
+              </Text>
+            </TouchableOpacity>
+          </Link>
 
-        <TouchableOpacity 
-          style={[styles.modeButton, styles.coordinateButton]} 
-          onPress={() => router.push("/coordinate")}
-        >
-          <Text style={styles.buttonEmoji}>🤝</Text>
-          <Text style={styles.buttonTitle}>Koordine Mod</Text>
-          <Text style={styles.buttonDescription}>Birden fazla agent koordine et</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Bitirme Projesi - 2025</Text>
+          <Link href="/coordinate" asChild>
+            <TouchableOpacity style={styles.card}>
+              <Text style={styles.cardIcon}>🤝</Text>
+              <Text style={styles.cardTitle}>Koordinatör Mod</Text>
+              <Text style={styles.cardDescription}>
+                Birden fazla agent koordine et
+              </Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
     </View>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
-    paddingHorizontal: 20,
+    backgroundColor: '#f5f5f5',
   },
-  header: {
-    marginTop: 80,
-    marginBottom: 40,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-  },
-  buttonContainer: {
-    gap: 20,
-  },
-  modeButton: {
-    padding: 24,
-    borderRadius: 16,
-    alignItems: "center",
-    shadowColor: "#000",
+  userCard: {
+    backgroundColor: '#007AFF',
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 25,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
   },
-  individualButton: {
-    backgroundColor: "#007AFF",
+  userInfo: {
+    flex: 1,
   },
-  coordinateButton: {
-    backgroundColor: "#34C759",
+  welcomeText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 5,
   },
-  buttonEmoji: {
+  emailText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 40,
+  },
+  cardContainer: {
+    gap: 20,
+  },
+  card: {
+    backgroundColor: 'white',
+    padding: 25,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardIcon: {
     fontSize: 48,
-    marginBottom: 12,
+    marginBottom: 15,
   },
-  buttonTitle: {
+  cardTitle: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
     marginBottom: 8,
+    color: '#333',
   },
-  buttonDescription: {
-    fontSize: 14,
-    color: "#fff",
-    opacity: 0.9,
-    textAlign: "center",
-  },
-  footer: {
-    position: "absolute",
-    bottom: 40,
-    alignSelf: "center",
-  },
-  footerText: {
-    fontSize: 14,
-    color: "#999",
+  cardDescription: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 22,
   },
 });
