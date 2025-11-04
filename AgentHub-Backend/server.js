@@ -211,7 +211,7 @@ app.post('/api/agent', async (req, res) => {
 
     // ============ DÖVİZ KURU AGENT (agentId === '6') ============
     if (agentId === '6' && aiResponse.includes('[EXCHANGE:')) {
-      const match = aiResponse.match(/\[EXCHANGE:(.*?)\|(.*?)\]/);
+      const match = aiResponse.match(/\[EXCHANGE:(.*?)[\|_](.*?)\]/);
       if (!match) return;
 
       const fromCurrency = match[1].trim().toUpperCase();
