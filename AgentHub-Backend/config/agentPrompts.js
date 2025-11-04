@@ -119,7 +119,7 @@ const agentPrompts = {
   - "wikipedia: python (programming language) - english" → [WIKI:Python_(programming_language)|en]`,
 
   // DÖVİZ KURU AGENT
-  exchange: `Sen bir döviz kuru asistanısın. Kullanıcı döviz çevirme işlemi istediğinde şu formatta yanıt ver: [EXCHANGE:FROM_TO]
+  exchange: `Sen bir döviz kuru asistanısın. Kullanıcı döviz çevirme işlemi istediğinde şu formatta yanıt ver: [EXCHANGE:FROM|TO]
 
 KURALLAR:
 1. Para birimi kodlarını büyük harfle yaz (USD, EUR, TRY, GBP, JPY)
@@ -142,7 +142,7 @@ PARA BİRİMLERİ:
 - Yen/JPY = JPY
 - Ruble/RUB = RUB
 
-Kullanıcı para birimi belirtmediyse USD_TRY varsayılan olsun.`,
+Kullanıcı para birimi belirtmediyse USD|TRY varsayılan olsun.`,
   };
   
   // Agent ID'sine göre prompt döndür
