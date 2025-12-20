@@ -8,6 +8,7 @@ const { getAgentPrompt } = require('./config/agentPrompts');
 // Express uygulaması oluştur
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
 // Middleware'ler
 app.use(cors());
@@ -18,9 +19,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Test endpoint'i - Sunucunun çalıştığını kontrol etmek için
 app.get('/', (req, res) => {
-    res.json({ message: 'AgentHub Backend çalışıyor!' });
-  });
-  
+  res.json({ message: 'AgentHub Backend çalışıyor!' });
+});
+
 // Bireysel mod endpoint
 app.post('/api/agent', async (req, res) => {
   try {
@@ -43,12 +44,12 @@ app.post('/api/agent', async (req, res) => {
       const cityMatch = aiResponse.match(/\[WEATHER:(.*?)\]/);
       if (cityMatch) {
         const city = cityMatch[1].trim();
-        
+
         console.log(`🌤️ Hava durumu API'sine yönlendiriliyor: ${city}`);
 
         try {
           const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-          
+
           if (!WEATHER_API_KEY) {
             throw new Error('WEATHER_API_KEY tanımlı değil');
           }
@@ -74,7 +75,7 @@ app.post('/api/agent', async (req, res) => {
 
         } catch (weatherError) {
           console.error('❌ Hava durumu hatası:', weatherError.message);
-          
+
           if (weatherError.response?.status === 404) {
             aiResponse = `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı.`;
           } else if (weatherError.response?.status === 401) {
@@ -95,41 +96,41 @@ app.post('/api/agent', async (req, res) => {
     if (agentId === '3' && aiResponse.includes('[TRANSLATE:')) {
       const match = aiResponse.match(/\[TRANSLATE:(.*?)\|(.*?)\|(.*?)\]/);
       if (!match) return;
-    
+
       const translation = match[1].trim();
       const sourceLang = match[2].trim();
       const targetLang = match[3].trim();
-    
+
       // Kullanıcıya hem çevrilmiş cümleyi hem de dil adlarını göster:
       aiResponse = `
     Çeviri (${sourceLang} → ${targetLang}):
     [${translation}]
       `.trim();
-    
+
       console.log(`✅ Çeviri: ${sourceLang} → ${targetLang} | ${translation}`);
-    } 
+    }
 
     // ============ HABER AGENT (agentId === '4') ============
     if (agentId === '4' && aiResponse.includes('[NEWS:')) {
       const match = aiResponse.match(/\[NEWS:(.*?)\|(.*?)\|(.*?)\]/);
       if (!match) return;
-    
+
       const topic = match[1].trim();
       const language = match[2].trim();
       const country = match[3].trim();
-    
+
       console.log(`📰 Haber isteği: ${topic} | Dil: ${language} | Ülke: ${country}`);
-    
+
       try {
         const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
         if (!GNEWS_API_KEY) throw new Error('GNEWS_API_KEY tanımlı değil');
-    
+
         const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(topic)}&lang=${language}&country=${country}&max=3&apikey=${GNEWS_API_KEY}`;
         console.log(`📡 GNews API isteği: ${url}`);
-    
+
         const response = await axios.get(url);
         const articles = response.data.articles || [];
-    
+
         if (!articles.length) {
           console.log('⚠️ Haber bulunamadı');
           const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
@@ -148,7 +149,7 @@ app.post('/api/agent', async (req, res) => {
       "link": "${a.url}"
     }`
           ).join(',\n');
-    
+
           const formatPrompt = `
           Kullanıcıya haber kartlarını aşağıdaki veriyle sunmalısın. Yanıtı, kullanıcının mesajındaki dilde (code: ${language}) üret.
           Her haber için;
@@ -164,11 +165,11 @@ app.post('/api/agent', async (req, res) => {
           Veri Listesi:
           [${rawList}]
           `;
-    
+
           const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
           const result = await model.generateContent(formatPrompt);
           aiResponse = result.response.text();
-    
+
           console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
         }
       } catch (err) {
@@ -261,7 +262,7 @@ ${fromCurrency} → ${toCurrency}
 
       } catch (exchangeError) {
         console.error('❌ Döviz kuru hatası:', exchangeError.message);
-        
+
         if (exchangeError.response?.status === 404) {
           aiResponse = `Üzgünüm, "${fromCurrency}" veya "${toCurrency}" para birimi tanınmıyor.`;
         } else if (exchangeError.response?.status === 401) {
@@ -270,7 +271,7 @@ ${fromCurrency} → ${toCurrency}
           aiResponse = 'Üzgünüm, döviz kuru bilgisi şu anda alınamıyor.';
         }
       }
-    }    
+    }
 
     res.json({
       success: true,
@@ -280,7 +281,7 @@ ${fromCurrency} → ${toCurrency}
   } catch (error) {
     console.error('❌ HATA DETAYI:', error);
     console.error('Hata Mesajı:', error.message);
-    
+
     res.status(500).json({
       success: false,
       error: error.message || 'Bir hata oluştu',
@@ -323,7 +324,7 @@ Yanıtı JSON formatında ver:
 }`;
 
     // ✅ JSON mode ile model oluştur
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
         responseMimeType: 'application/json'
@@ -332,9 +333,9 @@ Yanıtı JSON formatında ver:
 
     const planResult = await model.generateContent(plannerPrompt);
     const planText = planResult.response.text();
-    
+
     console.log('📄 Plan metni:', planText);
-    
+
     const plan = JSON.parse(planText);
     console.log('🤖 Koordinatör planı:', JSON.stringify(plan, null, 2));
 
@@ -368,7 +369,7 @@ Yanıtı JSON formatında ver:
 
       // Agent çağrısı yap
       try {
-        const agentResponse = await axios.post('http://localhost:3000/api/agent', {
+        const agentResponse = await axios.post(`${BACKEND_URL}/api/agent`, {
           agentId,
           agentName: step.agent,
           userMessage: taskInput
@@ -426,4 +427,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Sunucu port ${PORT} üzerinde çalışıyor`);
 });
 
-module.exports=app; 
+module.exports = app; 
