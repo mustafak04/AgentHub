@@ -17,52 +17,32 @@ app.use(express.json());
 // Gemini istemcisi oluştur
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Test endpoint'i - Sunucunun çalıştığını kontrol etmek için
-app.get('/', (req, res) => {
-  res.json({ message: 'AgentHub Backend çalışıyor!' });
-});
-
-// Bireysel mod endpoint
-app.post('/api/agent', async (req, res) => {
+// AGENT LOGİC FONKSİYONU (Internal Call İçin)
+async function processAgentRequest(agentId, agentName, userMessage) {
   try {
-    const { agentId, agentName, userMessage } = req.body;
-
     console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
-
     const systemMessage = getAgentPrompt(agentId);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-
     console.log('🤖 Gemini API çağrısı yapılıyor...');
     const result = await model.generateContent(prompt);
     let aiResponse = result.response.text();
-
     console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 100)}...`);
-
     // ============ HAVA DURUMU AGENT (agentId === '1') ============
     if (agentId === '1' && aiResponse.includes('[WEATHER:')) {
       const cityMatch = aiResponse.match(/\[WEATHER:(.*?)\]/);
       if (cityMatch) {
         const city = cityMatch[1].trim();
-
         console.log(`🌤️ Hava durumu API'sine yönlendiriliyor: ${city}`);
-
         try {
           const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-
-          if (!WEATHER_API_KEY) {
-            throw new Error('WEATHER_API_KEY tanımlı değil');
-          }
-
+          if (!WEATHER_API_KEY) throw new Error('WEATHER_API_KEY tanımlı değil');
           const weatherResponse = await axios.get(
             `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=metric&lang=tr`
           );
-
           const weatherData = weatherResponse.data;
-
           aiResponse = `
 📍 **${weatherData.name}, ${weatherData.sys.country}**
-
 🌡️ Sıcaklık: ${weatherData.main.temp}°C (Hissedilen: ${weatherData.main.feels_like}°C)
 ☁️ Durum: ${weatherData.weather[0].description}
 💧 Nem: ${weatherData.main.humidity}%
@@ -70,77 +50,57 @@ app.post('/api/agent', async (req, res) => {
 🌅 Gün doğumu: ${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
 🌇 Gün batımı: ${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
           `.trim();
-
           console.log('✅ Hava durumu bilgisi başarıyla alındı');
-
         } catch (weatherError) {
           console.error('❌ Hava durumu hatası:', weatherError.message);
-
-          if (weatherError.response?.status === 404) {
-            aiResponse = `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı.`;
-          } else if (weatherError.response?.status === 401) {
-            aiResponse = 'Hava durumu API anahtarı geçersiz.';
-          } else {
-            aiResponse = 'Üzgünüm, hava durumu bilgisi alınamadı.';
-          }
+          aiResponse = weatherError.response?.status === 404
+            ? `Üzgünüm, "${city}" şehri için hava durumu bilgisi bulunamadı.`
+            : 'Üzgünüm, hava durumu bilgisi alınamadı.';
         }
       }
     }
-
     // ============ HESAP MAKİNESİ AGENT (agentId === '2') ============
     if (agentId === '2') {
       console.log('✅ Hesap makinesi agentı yanıtı oluşturuldu.');
+      // Gemini zaten hesaplama yaptı, aiResponse kullan
     }
-
     // ============ ÇEVİRİ AGENT (agentId === '3') ============
     if (agentId === '3' && aiResponse.includes('[TRANSLATE:')) {
       const match = aiResponse.match(/\[TRANSLATE:(.*?)\|(.*?)\|(.*?)\]/);
-      if (!match) return;
+      if (match) {
+        const translation = match[1].trim();
+        const sourceLang = match[2].trim();
+        const targetLang = match[3].trim();
 
-      const translation = match[1].trim();
-      const sourceLang = match[2].trim();
-      const targetLang = match[3].trim();
-
-      // Kullanıcıya hem çevrilmiş cümleyi hem de dil adlarını göster:
-      aiResponse = `
-    Çeviri (${sourceLang} → ${targetLang}):
-    [${translation}]
-      `.trim();
-
-      console.log(`✅ Çeviri: ${sourceLang} → ${targetLang} | ${translation}`);
+        aiResponse = `Çeviri (${sourceLang} → ${targetLang}):\n[${translation}]`.trim();
+        console.log(`✅ Çeviri: ${sourceLang} → ${targetLang} | ${translation}`);
+      }
     }
-
     // ============ HABER AGENT (agentId === '4') ============
     if (agentId === '4' && aiResponse.includes('[NEWS:')) {
       const match = aiResponse.match(/\[NEWS:(.*?)\|(.*?)\|(.*?)\]/);
-      if (!match) return;
-
-      const topic = match[1].trim();
-      const language = match[2].trim();
-      const country = match[3].trim();
-
-      console.log(`📰 Haber isteği: ${topic} | Dil: ${language} | Ülke: ${country}`);
-
-      try {
-        const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
-        if (!GNEWS_API_KEY) throw new Error('GNEWS_API_KEY tanımlı değil');
-
-        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(topic)}&lang=${language}&country=${country}&max=3&apikey=${GNEWS_API_KEY}`;
-        console.log(`📡 GNews API isteği: ${url}`);
-
-        const response = await axios.get(url);
-        const articles = response.data.articles || [];
-
-        if (!articles.length) {
-          console.log('⚠️ Haber bulunamadı');
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const result = await model.generateContent(
-            `Kullanıcı "${topic}" hakkında haber istedi ama bulunamadı. Dili: ${language}. Yanıtı, mesajın dilinde ve nezaketli şekilde ver.`
-          );
-          aiResponse = result.response.text();
-        } else {
-          let rawList = articles.map((a, i) =>
-            `{
+      if (match) {
+        const topic = match[1].trim();
+        const language = match[2].trim();
+        const country = match[3].trim();
+        console.log(`📰 Haber isteği: ${topic} | Dil: ${language} | Ülke: ${country}`);
+        try {
+          const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
+          if (!GNEWS_API_KEY) throw new Error('GNEWS_API_KEY tanımlı değil');
+          const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(topic)}&lang=${language}&country=${country}&max=3&apikey=${GNEWS_API_KEY}`;
+          console.log(`📡 GNews API isteği: ${url}`);
+          const response = await axios.get(url);
+          const articles = response.data.articles || [];
+          if (!articles.length) {
+            console.log('⚠️ Haber bulunamadı');
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const result = await model.generateContent(
+              `Kullanıcı "${topic}" hakkında haber istedi ama bulunamadı. Dili: ${language}. Yanıtı, mesajın dilinde ve nezaketli şekilde ver.`
+            );
+            aiResponse = result.response.text();
+          } else {
+            let rawList = articles.map((a, i) =>
+              `{
       "sıra": ${i + 1},
       "başlık": "${a.title}",
       "açıklama": "${a.description || '-'}",
@@ -148,9 +108,8 @@ app.post('/api/agent', async (req, res) => {
       "tarih": "${a.publishedAt}",
       "link": "${a.url}"
     }`
-          ).join(',\n');
-
-          const formatPrompt = `
+            ).join(',\n');
+            const formatPrompt = `
           Kullanıcıya haber kartlarını aşağıdaki veriyle sunmalısın. Yanıtı, kullanıcının mesajındaki dilde (code: ${language}) üret.
           Her haber için;
           
@@ -165,126 +124,130 @@ app.post('/api/agent', async (req, res) => {
           Veri Listesi:
           [${rawList}]
           `;
-
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const result = await model.generateContent(formatPrompt);
-          aiResponse = result.response.text();
-
-          console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const result = await model.generateContent(formatPrompt);
+            aiResponse = result.response.text();
+            console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
+          }
+        } catch (err) {
+          console.error('❌ GNews Hatası:', err.message);
+          aiResponse = 'Üzgünüm, haber servisine şu anda ulaşılamıyor.';
         }
-      } catch (err) {
-        console.error('❌ GNews Hatası:', err.message);
-        aiResponse = 'Üzgünüm, haber servisine şu anda ulaşılamıyor.';
       }
     }
-
     // ============ WIKIPEDIA AGENT (agentId === '5') ============
     if (agentId === '5' && aiResponse.includes('[WIKI:')) {
       const match = aiResponse.match(/\[WIKI:(.*?)\|(.*?)\]/);
-      if (!match) return;
-
-      const topic = match[1].trim().replace(/\s+/g, '_');       // boşlukları _ yap
-      const lang = match[2].trim().toLowerCase();
-
-      // Wikipedia API'den özet çek
-      const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
-      console.log(`📡 Wikipedia API isteği: ${url}`);
-
-      try {
-        const { data: wikiData } = await axios.get(url);
-
-        // En sade haliyle kullanıcıya gösterilecek metin:
-        let wikiResponse = `📚 ${wikiData.title}\n`;
-        if (wikiData.description) wikiResponse += `(${wikiData.description})\n\n`;
-        wikiResponse += `${wikiData.extract}\n`;
-        if (wikiData.content_urls && wikiData.content_urls.desktop)
-          wikiResponse += `\n🔗 ${wikiData.content_urls.desktop.page}`;
-        aiResponse = wikiResponse;
-
-        console.log('✅ Wikipedia özeti döndürüldü');
-      } catch (err) {
-        aiResponse = lang === 'tr'
-          ? 'Üzgünüm, istenen maddeyle ilgili Wikipedia özetine ulaşılamadı.'
-          : 'Sorry, could not find a summary for this topic on Wikipedia.';
-        console.error('❌ Wikipedia API hatası:', err.message);
+      if (match) {
+        const topic = match[1].trim().replace(/\s+/g, '_');
+        const lang = match[2].trim().toLowerCase();
+        const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
+        console.log(`📡 Wikipedia API isteği: ${url}`);
+        try {
+          const { data: wikiData } = await axios.get(url);
+          let wikiResponse = `📚 ${wikiData.title}\n`;
+          if (wikiData.description) wikiResponse += `(${wikiData.description})\n\n`;
+          wikiResponse += `${wikiData.extract}\n`;
+          if (wikiData.content_urls && wikiData.content_urls.desktop)
+            wikiResponse += `\n🔗 ${wikiData.content_urls.desktop.page}`;
+          aiResponse = wikiResponse;
+          console.log('✅ Wikipedia özeti döndürüldü');
+        } catch (err) {
+          aiResponse = lang === 'tr'
+            ? 'Üzgünüm, istenen maddeyle ilgili Wikipedia özetine ulaşılamadı.'
+            : 'Sorry, could not find a summary for this topic on Wikipedia.';
+          console.error('❌ Wikipedia API hatası:', err.message);
+        }
       }
     }
-
     // ============ DÖVİZ KURU AGENT (agentId === '6') ============
     if (agentId === '6' && aiResponse.includes('[EXCHANGE:')) {
       const match = aiResponse.match(/\[EXCHANGE:(.*?)[\|_](.*?)\]/);
-      if (!match) return;
-
-      const fromCurrency = match[1].trim().toUpperCase();
-      const toCurrency = match[2].trim().toUpperCase();
-
-      console.log(`💱 Döviz kuru isteği: ${fromCurrency} → ${toCurrency}`);
-
-      try {
-        const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY;
-        if (!EXCHANGE_RATE_API_KEY) throw new Error('EXCHANGE_RATE_API_KEY tanımlı değil');
-
-        const url = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/pair/${fromCurrency}/${toCurrency}`;
-        console.log(`📡 ExchangeRate API isteği: ${url}`);
-
-        const response = await axios.get(url);
-
-        if (response.data.result === 'success') {
-          const rate = response.data.conversion_rate;
-          const lastUpdate = new Date(response.data.time_last_update_unix * 1000).toLocaleString('tr-TR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-
-          aiResponse = `
+      if (match) {
+        const fromCurrency = match[1].trim().toUpperCase();
+        const toCurrency = match[2].trim().toUpperCase();
+        console.log(`💱 Döviz kuru isteği: ${fromCurrency} → ${toCurrency}`);
+        try {
+          const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY;
+          if (!EXCHANGE_RATE_API_KEY) throw new Error('EXCHANGE_RATE_API_KEY tanımlı değil');
+          const url = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/pair/${fromCurrency}/${toCurrency}`;
+          console.log(`📡 ExchangeRate API isteği: ${url}`);
+          const response = await axios.get(url);
+          if (response.data.result === 'success') {
+            const rate = response.data.conversion_rate;
+            const lastUpdate = new Date(response.data.time_last_update_unix * 1000).toLocaleString('tr-TR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            aiResponse = `
 💱 **GÜNCEL DÖVİZ KURU**
-
 ${fromCurrency} → ${toCurrency}
 **1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}**
-
 📊 **Örnek Çevrimler:**
 • 10 ${fromCurrency} = ${(rate * 10).toFixed(2)} ${toCurrency}
 • 100 ${fromCurrency} = ${(rate * 100).toFixed(2)} ${toCurrency}
 • 1000 ${fromCurrency} = ${(rate * 1000).toFixed(2)} ${toCurrency}
-
 🕐 Son Güncelleme: ${lastUpdate}
-          `.trim();
-
-          console.log(`✅ Döviz kuru başarıyla alındı: 1 ${fromCurrency} = ${rate} ${toCurrency}`);
-
-        } else {
-          console.log('⚠️ Döviz kuru bulunamadı');
-          aiResponse = `Üzgünüm, "${fromCurrency}" → "${toCurrency}" döviz kuru bilgisi bulunamadı. Lütfen para birimi kodlarını kontrol edin.`;
-        }
-
-      } catch (exchangeError) {
-        console.error('❌ Döviz kuru hatası:', exchangeError.message);
-
-        if (exchangeError.response?.status === 404) {
-          aiResponse = `Üzgünüm, "${fromCurrency}" veya "${toCurrency}" para birimi tanınmıyor.`;
-        } else if (exchangeError.response?.status === 401) {
-          aiResponse = 'Döviz kuru API anahtarı geçersiz.';
-        } else {
-          aiResponse = 'Üzgünüm, döviz kuru bilgisi şu anda alınamıyor.';
+            `.trim();
+            console.log(`✅ Döviz kuru başarıyla alındı: 1 ${fromCurrency} = ${rate} ${toCurrency}`);
+          } else {
+            console.log('⚠️ Döviz kuru bulunamadı');
+            aiResponse = `Üzgünüm, "${fromCurrency}" → "${toCurrency}" döviz kuru bilgisi bulunamadı. Lütfen para birimi kodlarını kontrol edin.`;
+          }
+        } catch (exchangeError) {
+          console.error('❌ Döviz kuru hatası:', exchangeError.message);
+          aiResponse = exchangeError.response?.status === 404
+            ? `Üzgünüm, "${fromCurrency}" veya "${toCurrency}" para birimi tanınmıyor.`
+            : 'Üzgünüm, döviz kuru bilgisi şu anda alınamıyor.';
         }
       }
     }
-
-    res.json({
+    return {
       success: true,
-      agentName: agentName,
-      response: aiResponse,
-    });
+      response: aiResponse
+    };
+  } catch (error) {
+    console.error('❌ Agent hatası:', error.message);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Test endpoint'i - Sunucunun çalıştığını kontrol etmek için
+app.get('/', (req, res) => {
+  res.json({ message: 'AgentHub Backend çalışıyor!' });
+});
+
+// Bireysel mod endpoint
+app.post('/api/agent', async (req, res) => {
+  try {
+    const { agentId, agentName, userMessage } = req.body;
+
+    // Yeni internal fonksiyonu kullan
+    const result = await processAgentRequest(agentId, agentName, userMessage);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        agentName: agentName,
+        response: result.response
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
   } catch (error) {
     console.error('❌ HATA DETAYI:', error);
-    console.error('Hata Mesajı:', error.message);
-
     res.status(500).json({
       success: false,
-      error: error.message || 'Bir hata oluştu',
+      error: error.message || 'Bir hata oluştu'
     });
   }
 });
@@ -369,19 +332,22 @@ Yanıtı JSON formatında ver:
 
       // Agent çağrısı yap
       try {
-        const agentResponse = await axios.post(`${BACKEND_URL}/api/agent`, {
-          agentId,
-          agentName: step.agent,
-          userMessage: taskInput
-        });
-
-        previousOutput = agentResponse.data.response;
-        stepResults.push({
-          step: i + 1,
-          agent: step.agent,
-          task: step.task,
-          output: previousOutput
-        });
+        const agentResponse = await processAgentRequest(agentId, step.agent, taskInput);
+        if (agentResponse.success) {
+          previousOutput = agentResponse.response;
+          stepResults.push({
+            step: i + 1,
+            agent: step.agent,
+            task: step.task,
+            output: previousOutput
+          });
+        } else {
+          stepResults.push({
+            step: i + 1,
+            agent: step.agent,
+            error: agentResponse.error
+          });
+        }
 
         console.log(`✅ Adım ${i + 1} tamamlandı`);
       } catch (error) {
