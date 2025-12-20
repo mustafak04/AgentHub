@@ -31,7 +31,7 @@
     "plugins": [
       "expo-router",
       "@react-native-firebase/app",
-      "@react-native-firebase/auth", 
+      "@react-native-firebase/auth",
       [
         "expo-splash-screen",
         {
@@ -48,6 +48,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "99d2aec9-b835-4e35-9b1a-cc22e669510f"
+      }
     }
   }
 }
