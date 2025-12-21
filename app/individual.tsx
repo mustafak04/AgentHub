@@ -8,6 +8,7 @@ const agents = [
   { id: "4", name: "Haber Agent", description: "Güncel haberleri getirir", emoji: "📰", color: "#FF2D55" },
   { id: '5', name: 'Wikipedia Agent', description: "Wikipedia özeti sağlar", emoji: '📚', color: '#9013FE' },
   { id: '6', name: 'Döviz Agent', description: "Döviz kurlarını gösterir", emoji: '💰', color: '#FF9500' },
+  { id: '7', name: 'Kod Asistanı', description: "Kod yaz, debug yap, açıkla", emoji: '💻', color: '#34C759' },
 ];
 
 export default function Individual() {

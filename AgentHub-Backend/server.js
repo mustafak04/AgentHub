@@ -205,6 +205,11 @@ ${fromCurrency} → ${toCurrency}
         }
       }
     }
+    // ============ KOD ASİSTANI AGENT (agentId === '7') ============
+    if (agentId === '7') {
+      // Gemini zaten kod asistanı olarak çalışacak
+      console.log('✅ Kod asistanı yanıtı oluşturuldu.');
+    }
     return {
       success: true,
       response: aiResponse
