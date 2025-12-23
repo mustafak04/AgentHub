@@ -216,36 +216,36 @@ ${fromCurrency} → ${toCurrency}
       if (match) {
         const prompt = match[1].trim();
         console.log(`🎨 Görsel oluşturuluyor: ${prompt.substring(0, 50)}...`);
+
         try {
-          const HF_API_KEY = process.env.HUGGINGFACE_API_KEY;
-          if (!HF_API_KEY) throw new Error('HUGGINGFACE_API_KEY tanımlı değil');
-          const response = await axios.post(
-            'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1',
-            { inputs: prompt },
-            {
-              headers: {
-                'Authorization': `Bearer ${HF_API_KEY}`,
-                'Content-Type': 'application/json'
-              },
-              responseType: 'arraybuffer',
-              timeout: 30000 // 30 saniye timeout
-            }
-          );
-          // Image'i base64'e çevir
-          const base64Image = Buffer.from(response.data, 'binary').toString('base64');
-          const imageDataUrl = `data:image/jpeg;base64,${base64Image}`;
+          // Gemini'nin Imagen 3 modelini kullan
+          const imageModel = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+
+          const result = await imageModel.generateContent({
+            prompt: prompt,
+            numberOfImages: 1,
+            aspectRatio: '1:1',
+          });
+
+          // Base64 image data al
+          const image = result.response.candidates[0];
+          const imageData = image.content.parts[0].inlineData;
+          const imageDataUrl = `data:${imageData.mimeType};base64,${imageData.data}`;
+
           aiResponse = `🎨 **Görsel Oluşturuldu!**
+
 **Prompt:** ${prompt}
+
 ![Generated Image](${imageDataUrl})
-Not: Görsel AI tarafından oluşturulmuştur.`;
-          console.log('✅ Görsel başarıyla oluşturuldu');
+
+Not: Gemini Imagen 3 ile oluşturuldu.`;
+
+          console.log('✅ Görsel başarıyla oluşturuldu (Gemini Imagen 3)');
         } catch (imageError) {
           console.error('❌ Görsel oluşturma hatası:', imageError.message);
 
-          if (imageError.code === 'ECONNABORTED') {
-            aiResponse = 'Üzgünüm, görsel oluşturma çok uzun sürdü. Lütfen tekrar deneyin.';
-          } else if (imageError.response?.status === 503) {
-            aiResponse = 'Model şu anda yükleniyor, lütfen 20 saniye sonra tekrar deneyin.';
+          if (imageError.message.includes('quota')) {
+            aiResponse = 'Günlük görsel kotası doldu. Lütfen yarın tekrar deneyin.';
           } else {
             aiResponse = 'Üzgünüm, görsel oluşturulamadı. Lütfen tekrar deneyin.';
           }
