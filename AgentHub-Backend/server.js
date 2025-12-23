@@ -22,7 +22,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
   try {
     console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
     const systemMessage = getAgentPrompt(agentId);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
     const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
     console.log('🤖 Gemini API çağrısı yapılıyor...');
     const result = await model.generateContent(prompt);
