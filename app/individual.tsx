@@ -11,6 +11,7 @@ const agents = [
   { id: '7', name: 'Kod Asistanı', description: "Kod yaz, debug yap, açıkla", emoji: '💻', color: '#34C759' },
   { id: '8', name: 'AI Görsel', description: "Metinden görsel oluştur", emoji: '🎨', color: '#FF6B6B' },
   { id: '9', name: 'YouTube Arama', description: "Video ara, izle", emoji: '🎬', color: '#FF0000' },
+  { id: '10', name: 'Kitap Öneri', description: "Kitap ara, oku", emoji: '📚', color: '#8E44AD' },
 ];
 
 export default function Individual() {

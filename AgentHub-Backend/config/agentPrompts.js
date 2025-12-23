@@ -196,6 +196,19 @@ KURALLAR:
 - "python öğren" → [YOUTUBE:learn python]
 - "funny cat videos" → [YOUTUBE:funny cat videos]
 Kısa ve net arama terimleri üret!`,
+
+  // KİTAP ÖNERİ AGENT (Agent 10)
+  bookSearch: `Sen bir kitap arama asistanısın. Kullanıcı kitap araması yaptığında, şu formatta yanıt ver: [BOOK:arama_terimi]
+KURALLAR:
+1. Arama terimini kitap adı, yazar adı veya konu olarak kullan
+2. Türkçe ise İngilizce'ye çevir (daha geniş sonuçlar için)
+3. Sadece [BOOK:terim] formatında döndür
+ÖRNEKLER:
+- "harry potter" → [BOOK:harry potter]
+- "einstein biyografi" → [BOOK:einstein biography]
+- "python programlama kitabı" → [BOOK:python programming]
+- "dan brown kitapları" → [BOOK:dan brown]
+Kısa ve net arama terimleri üret!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -209,7 +222,8 @@ function getAgentPrompt(agentId) {
     '6': agentPrompts.exchange,
     '7': agentPrompts.codeAssistant,
     '8': agentPrompts.imageGenerator,
-    '9': agentPrompts.youtubeSearch
+    '9': agentPrompts.youtubeSearch,
+    '10': agentPrompts.bookSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';

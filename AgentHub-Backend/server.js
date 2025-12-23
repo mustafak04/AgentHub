@@ -298,7 +298,6 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
             aiResponse = videoList;
           }
-
           console.log('✅ YouTube sonuçları döndürüldü');
         } catch (youtubeError) {
           console.error('❌ YouTube API hatası:', youtubeError.message);
@@ -311,13 +310,74 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
-
     // Helper function: Sayı formatlama
     function formatNumber(num) {
       const n = parseInt(num);
       if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
       if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
       return n.toString();
+    }
+    // ============ KİTAP ÖNERİ AGENT (agentId === '10') ============
+    if (agentId === '10' && aiResponse.includes('[BOOK:')) {
+      const match = aiResponse.match(/\[BOOK:(.*?)\]/);
+      if (match) {
+        const searchQuery = match[1].trim();
+        console.log(`📚 Kitap araması: ${searchQuery}`);
+        try {
+          // YouTube API key'i kullan (aynı Google Cloud projesi)
+          const GOOGLE_API_KEY = process.env.YOUTUBE_API_KEY;
+          if (!GOOGLE_API_KEY) throw new Error('YOUTUBE_API_KEY tanımlı değil');
+          const response = await axios.get('https://www.googleapis.com/books/v1/volumes', {
+            params: {
+              q: searchQuery,
+              maxResults: 5,
+              key: GOOGLE_API_KEY
+            }
+          });
+          const books = response.data.items;
+          if (!books || books.length === 0) {
+            aiResponse = `"${searchQuery}" için kitap bulunamadı.`;
+          } else {
+            let bookList = `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n`;
+            books.forEach((book, index) => {
+              const volumeInfo = book.volumeInfo;
+              const title = volumeInfo.title || 'Başlık yok';
+              const authors = volumeInfo.authors ? volumeInfo.authors.join(', ') : 'Yazar bilinmiyor';
+              const publisher = volumeInfo.publisher || 'N/A';
+              const publishedDate = volumeInfo.publishedDate || 'N/A';
+              const pageCount = volumeInfo.pageCount || 'N/A';
+              const averageRating = volumeInfo.averageRating || 'N/A';
+              const description = volumeInfo.description
+                ? volumeInfo.description.substring(0, 200) + '...'
+                : 'Açıklama yok';
+              const thumbnail = volumeInfo.imageLinks?.thumbnail || '';
+              const previewLink = volumeInfo.previewLink || volumeInfo.infoLink || '';
+              bookList += `**${index + 1}. ${title}**\n`;
+              bookList += `✍️ Yazar: ${authors}\n`;
+              bookList += `📖 ${pageCount} sayfa • ⭐ ${averageRating}\n`;
+              bookList += `📅 ${publisher} (${publishedDate})\n`;
+              bookList += `📝 ${description}\n`;
+              if (previewLink) {
+                bookList += `[🔗 Detaylar](${previewLink})\n`;
+              }
+              if (thumbnail) {
+                bookList += `![${title}](${thumbnail})\n`;
+              }
+              bookList += `\n`;
+            });
+            aiResponse = bookList;
+          }
+          console.log('✅ Kitap sonuçları döndürüldü');
+        } catch (bookError) {
+          console.error('❌ Google Books API hatası:', bookError.message);
+
+          if (bookError.response?.status === 403) {
+            aiResponse = 'Google Books API kotası doldu veya API key geçersiz.';
+          } else {
+            aiResponse = 'Üzgünüm, kitap araması yapılamadı.';
+          }
+        }
+      }
     }
     return {
       success: true,
