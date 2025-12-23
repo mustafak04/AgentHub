@@ -232,6 +232,54 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ YOUTUBE ARAMA AGENT (agentId === '9') ============
+    if (agentId === '9' && aiResponse.includes('[YOUTUBE:')) {
+      const match = aiResponse.match(/\[YOUTUBE:(.*?)\]/);
+      if (match) {
+        const searchQuery = match[1].trim();
+        console.log(`🎬 YouTube araması: ${searchQuery}`);
+        try {
+          const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+          if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY tanımlı değil');
+          const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+            params: {
+              part: 'snippet',
+              q: searchQuery,
+              type: 'video',
+              maxResults: 5,
+              key: YOUTUBE_API_KEY
+            }
+          });
+          const videos = response.data.items;
+          if (!videos.length) {
+            aiResponse = `"${searchQuery}" için video bulunamadı.`;
+          } else {
+            let videoList = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
+            videos.forEach((video, index) => {
+              const title = video.snippet.title;
+              const channelTitle = video.snippet.channelTitle;
+              const videoId = video.id.videoId;
+              const thumbnail = video.snippet.thumbnails.medium.url;
+              const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+              videoList += `**${index + 1}. ${title}**\n`;
+              videoList += `📺 Kanal: ${channelTitle}\n`;
+              videoList += `🔗 ${videoUrl}\n`;
+              videoList += `![${title}](${thumbnail})\n\n`;
+            });
+            aiResponse = videoList;
+          }
+          console.log('✅ YouTube sonuçları döndürüldü');
+        } catch (youtubeError) {
+          console.error('❌ YouTube API hatası:', youtubeError.message);
+
+          if (youtubeError.response?.status === 403) {
+            aiResponse = 'YouTube API kotası doldu veya API key geçersiz.';
+          } else {
+            aiResponse = 'Üzgünüm, YouTube araması yapılamadı.';
+          }
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse

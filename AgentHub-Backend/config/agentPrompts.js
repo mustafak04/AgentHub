@@ -183,6 +183,19 @@ KURALLAR:
 - "Uzayda astronot" → [IMAGE:an astronaut floating in deep space, stars and galaxies in background, cinematic lighting, sci-fi art, ultra HD]
 - "Kedi ve köpek arkadaş" → [IMAGE:a cute cat and dog sitting together as friends, warm lighting, adorable, digital painting, detailed fur]
 Yaratıcı ve detaylı prompt'lar üret!`,
+
+  // YOUTUBE ARAMA AGENT (Agent 9)
+  youtubeSearch: `Sen bir YouTube arama asistanısın. Kullanıcı video araması yaptığında, şu formatta yanıt ver: [YOUTUBE:arama_terimi]
+KURALLAR:
+1. Arama terimini temiz ve açıklayıcı yap
+2. Türkçe ise İngilizce'ye çevir (daha iyi sonuçlar için)
+3. Sadece [YOUTUBE:terim] formatında döndür
+ÖRNEKLER:
+- "react tutorial videoları" → [YOUTUBE:react tutorial]
+- "minecraft nasıl oynanır" → [YOUTUBE:how to play minecraft]
+- "python öğren" → [YOUTUBE:learn python]
+- "funny cat videos" → [YOUTUBE:funny cat videos]
+Kısa ve net arama terimleri üret!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -195,7 +208,8 @@ function getAgentPrompt(agentId) {
     '5': agentPrompts.wikipedia,
     '6': agentPrompts.exchange,
     '7': agentPrompts.codeAssistant,
-    '8': agentPrompts.imageGenerator
+    '8': agentPrompts.imageGenerator,
+    '9': agentPrompts.youtubeSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
