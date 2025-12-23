@@ -388,6 +388,19 @@ KURALLAR:
 - "pizza burger döner hangisi" → [RANDOM:pizza,burger,döner]
 - "evet hayır belki" → [RANDOM:evet,hayır,belki]
 Virgülle ayır!`,
+
+  // CRYPTO FİYAT AGENT (Agent 23)
+  cryptoPrice: `Sen bir kripto para fiyat asistanısın. Kullanıcı kripto fiyatı sorduğunda: [CRYPTO:coin_id]
+KURALLAR:
+1. Coin ID kullan (bitcoin, ethereum, dogecoin)
+2. Küçük harf
+3. Sadece [CRYPTO:id] formatı
+ÖRNEKLER:
+- "bitcoin fiyatı" → [CRYPTO:bitcoin]
+- "ethereum kaç dolar" → [CRYPTO:ethereum]
+- "bnb fiyat" → [CRYPTO:binancecoin]
+- "doge" → [CRYPTO:dogecoin]
+Coin ID kullan!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -414,7 +427,8 @@ function getAgentPrompt(agentId) {
     '19': agentPrompts.motivation,
     '20': agentPrompts.qrCode,
     '21': agentPrompts.ipInfo,
-    '22': agentPrompts.randomChoice
+    '22': agentPrompts.randomChoice,
+    '23': agentPrompts.cryptoPrice
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';

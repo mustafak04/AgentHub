@@ -829,6 +829,44 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         console.log('✅ Rastgele seçim yapıldı');
       }
     }
+    // ============ CRYPTO FİYAT AGENT (agentId === '23') ============
+    if (agentId === '23' && aiResponse.includes('[CRYPTO:')) {
+      const match = aiResponse.match(/\[CRYPTO:(.*?)\]/);
+      if (match) {
+        const coinId = match[1].trim().toLowerCase();
+        console.log(`₿ Crypto: ${coinId}`);
+        try {
+          const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price`, {
+            params: {
+              ids: coinId,
+              vs_currencies: 'usd,try',
+              include_24hr_change: 'true',
+              include_market_cap: 'true'
+            }
+          });
+          const data = response.data[coinId];
+
+          if (!data) {
+            aiResponse = `"${coinId}" bulunamadı. Coin ID'yi kontrol et (bitcoin, ethereum vb.)`;
+          } else {
+            const usdPrice = data.usd?.toFixed(2) || 'N/A';
+            const tryPrice = data.try?.toFixed(2) || 'N/A';
+            const change24h = data.usd_24h_change?.toFixed(2) || 'N/A';
+            const changeEmoji = parseFloat(change24h) >= 0 ? '📈' : '📉';
+            const marketCap = data.usd_market_cap ? `$${(data.usd_market_cap / 1000000000).toFixed(2)}B` : 'N/A';
+            aiResponse = `₿ **${coinId.toUpperCase()} Fiyat:**\n\n`;
+            aiResponse += `💵 USD: $${usdPrice}\n`;
+            aiResponse += `₺ TRY: ₺${tryPrice}\n`;
+            aiResponse += `${changeEmoji} 24s Değişim: ${change24h}%\n`;
+            aiResponse += `📊 Piyasa Değeri: ${marketCap}`;
+          }
+          console.log('✅ Crypto fiyat alındı');
+        } catch (cryptoError) {
+          console.error('❌ CoinGecko API hatası:', cryptoError.message);
+          aiResponse = 'Üzgünüm, crypto fiyatı alınamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
