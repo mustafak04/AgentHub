@@ -218,36 +218,23 @@ ${fromCurrency} → ${toCurrency}
         console.log(`🎨 Görsel oluşturuluyor: ${prompt.substring(0, 50)}...`);
 
         try {
-          const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
-
-          const result = await imageModel.generateContent({
-            prompt: prompt,
-            numberOfImages: 1,
-            aspectRatio: '1:1',
-          });
-
-          // Base64 image data al
-          const image = result.response.candidates[0];
-          const imageData = image.content.parts[0].inlineData;
-          const imageDataUrl = `data:${imageData.mimeType};base64,${imageData.data}`;
+          // Pollinations.AI - Ücretsiz, API key gerekmez, çok hızlı!
+          const encodedPrompt = encodeURIComponent(prompt);
+          const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
 
           aiResponse = `🎨 **Görsel Oluşturuldu!**
 
 **Prompt:** ${prompt}
 
-![Generated Image](${imageDataUrl})
+🖼️ **Görsel Linki:**
+${imageUrl}
 
-Not: Gemini Imagen 3 ile oluşturuldu.`;
+Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
-          console.log('✅ Görsel başarıyla oluşturuldu (Gemini Imagen 3)');
+          console.log('✅ Görsel başarıyla oluşturuldu (Pollinations.AI)');
         } catch (imageError) {
           console.error('❌ Görsel oluşturma hatası:', imageError.message);
-
-          if (imageError.message.includes('quota')) {
-            aiResponse = 'Günlük görsel kotası doldu. Lütfen yarın tekrar deneyin.';
-          } else {
-            aiResponse = 'Üzgünüm, görsel oluşturulamadı. Lütfen tekrar deneyin.';
-          }
+          aiResponse = 'Üzgünüm, görsel oluşturulamadı. Lütfen tekrar deneyin.';
         }
       }
     }
