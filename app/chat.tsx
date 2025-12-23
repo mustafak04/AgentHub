@@ -5,11 +5,13 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
+import { useTheme } from './context/ThemeContext';
 
 // Backend URL'si
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
 
 export default function Chat() {
+  const { colors } = useTheme();
   // URL'den gelen parametreleri al (agentId ve agentName)
   const { agentId, agentName } = useLocalSearchParams();
 
@@ -116,16 +118,16 @@ export default function Chat() {
 
   // Mesaj balonları
   const renderMessage = ({ item }: { item: typeof messages[0] }) => (
-    <View style={[styles.messageBubble, item.sender === "user" ? styles.userBubble : styles.agentBubble]}>
+    <View style={[styles.messageBubble, item.sender === "user" ? styles.userBubble : [styles.agentBubble, { backgroundColor: colors.card }]]}>
       {item.sender === "user" ? (
         <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
       ) : (
         <Markdown style={{
-          body: { color: '#000', fontSize: 16 },
-          code_inline: { backgroundColor: '#f0f0f0', color: '#d63384', fontFamily: 'monospace' },
-          code_block: { backgroundColor: '#f8f9fa', padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-          fence: { backgroundColor: '#f8f9fa', padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-          heading1: { fontSize: 20, fontWeight: 'bold' },
+          body: { color: colors.text, fontSize: 16 },
+          code_inline: { backgroundColor: colors.input, color: '#d63384', fontFamily: 'monospace' },
+          code_block: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+          fence: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+          heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
           strong: { fontWeight: 'bold' },
           em: { fontStyle: 'italic' },
         }}>
@@ -137,12 +139,12 @@ export default function Chat() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={90}
     >
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>{agentName || "Koordine Mod"}</Text>
+      <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.header, { color: colors.text }]}>{agentName || "Koordine Mod"}</Text>
         <TouchableOpacity onPress={clearChatHistory} style={styles.clearButton}>
           <Text style={styles.clearButtonText}>🗑️ Temizle</Text>
         </TouchableOpacity>
@@ -163,10 +165,11 @@ export default function Chat() {
         </View>
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.input, color: colors.text, borderColor: colors.border }]}
           placeholder="Mesajınızı yazın..."
+          placeholderTextColor={colors.textSecondary}
           value={inputText}
           onChangeText={setInputText}
           editable={!loading}

@@ -1,9 +1,11 @@
 import auth from '@react-native-firebase/auth';
 import { Link, router } from 'expo-router';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from './context/ThemeContext';
 
 export default function HomeScreen() {
   const user = auth().currentUser;
+  const { colors, isDark, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     Alert.alert(
@@ -33,39 +35,44 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Kullanıcı Bilgisi Kartı */}
       <View style={styles.userCard}>
         <View style={styles.userInfo}>
           <Text style={styles.welcomeText}>👋 Hoş Geldin!</Text>
           <Text style={styles.emailText}>{user?.email}</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>🚪 Çıkış</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
+            <Text style={styles.themeIcon}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>🚪 Çıkış</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Ana Sayfa İçeriği */}
       <View style={styles.content}>
-        <Text style={styles.title}>🤖 AgentHub</Text>
-        <Text style={styles.subtitle}>Yapay Zeka Agent'larınız</Text>
+        <Text style={[styles.title, { color: colors.text }]}>🤖 AgentHub</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Yapay Zeka Agent'larınız</Text>
 
         <View style={styles.cardContainer}>
           <Link href="/individual" asChild>
-            <TouchableOpacity style={styles.card}>
+            <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={styles.cardIcon}>👤</Text>
-              <Text style={styles.cardTitle}>Bireysel Mod</Text>
-              <Text style={styles.cardDescription}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Bireysel Mod</Text>
+              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
                 Tek bir agent ile sohbet et
               </Text>
             </TouchableOpacity>
           </Link>
 
           <Link href="/coordinate" asChild>
-            <TouchableOpacity style={styles.card}>
+            <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={styles.cardIcon}>🤝</Text>
-              <Text style={styles.cardTitle}>Koordinatör Mod</Text>
-              <Text style={styles.cardDescription}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Koordinatör Mod</Text>
+              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
                 Birden fazla agent koordine et
               </Text>
             </TouchableOpacity>
@@ -79,7 +86,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   userCard: {
     backgroundColor: '#007AFF',
@@ -110,6 +116,21 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  themeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  themeIcon: {
+    fontSize: 20,
+  },
   logoutButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 10,
@@ -137,14 +158,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     textAlign: 'center',
-    color: '#666',
     marginBottom: 40,
   },
   cardContainer: {
     gap: 20,
   },
   card: {
-    backgroundColor: 'white',
     padding: 25,
     borderRadius: 15,
     shadowColor: '#000',
@@ -161,11 +180,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
   },
   cardDescription: {
     fontSize: 16,
-    color: '#666',
     lineHeight: 22,
   },
 });

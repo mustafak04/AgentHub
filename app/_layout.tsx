@@ -2,6 +2,7 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, LogBox, StyleSheet, View } from 'react-native';
+import { ThemeProvider } from './context/ThemeContext';
 
 // ✅ Warning'leri sustur
 LogBox.ignoreLogs([
@@ -51,12 +52,14 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* @ts-ignore */}
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      {/* @ts-ignore */}
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <ThemeProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* @ts-ignore */}
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        {/* @ts-ignore */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </ThemeProvider>
   );
 }
 

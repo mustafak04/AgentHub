@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useTheme } from "./context/ThemeContext";
 
 const agents = [
   { id: "1", name: "Hava Durumu Agent", description: "Hava durumu bilgisi sağlar", emoji: "🌤️", color: "#FF9500", category: "basic" },
@@ -40,6 +41,7 @@ const categories = [
 
 export default function Individual() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -65,42 +67,42 @@ export default function Individual() {
     return categoryMatch && searchMatch;
   });
 
-  // Agent kartı
   const renderAgentCard = ({ item }: { item: typeof agents[0] }) => (
     <TouchableOpacity
-      style={[styles.card, { borderLeftColor: item.color, borderLeftWidth: 4 }]}
+      style={[styles.card, { borderLeftColor: item.color, borderLeftWidth: 4, backgroundColor: colors.card }]}
       onPress={() => {
         router.push(`/chat?agentId=${item.id}&agentName=${item.name}`);
       }}
     >
       <Text style={styles.emoji}>{item.emoji}</Text>
       <View style={styles.textContainer}>
-        <Text style={styles.agentName}>{item.name}</Text>
-        <Text style={styles.agentDescription}>{item.description}</Text>
+        <Text style={[styles.agentName, { color: colors.text }]}>{item.name}</Text>
+        <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{item.description}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>👤 Agent Listesi</Text>
-      <Text style={styles.subtitle}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>👤 Agent Listesi</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         {filteredAgents.length} agent {searchQuery || selectedCategories.length > 0 ? 'bulundu' : 'mevcut'}
       </Text>
 
+
       {/* Arama Çubuğu */}
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Agent ara..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text style={styles.clearButton}>✕</Text>
+            <Text style={[styles.clearButton, { color: colors.textSecondary }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -119,12 +121,12 @@ export default function Individual() {
               key={category.id}
               style={[
                 styles.categoryButton,
-                { backgroundColor: isSelected ? category.color : '#f0f0f0' }
+                { backgroundColor: isSelected ? category.color : colors.buttonBackground }
               ]}
               onPress={() => toggleCategory(category.id)}
             >
               <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-              <Text style={[styles.categoryText, { color: isSelected ? '#fff' : '#333' }]}>
+              <Text style={[styles.categoryText, { color: isSelected ? '#fff' : colors.buttonText }]}>
                 {category.name}
               </Text>
             </TouchableOpacity>
@@ -140,8 +142,8 @@ export default function Individual() {
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>🔍 Sonuç bulunamadı</Text>
-            <Text style={styles.emptySubtext}>Farklı bir arama deneyin</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>🔍 Sonuç bulunamadı</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Farklı bir arama deneyin</Text>
           </View>
         }
       />
@@ -155,18 +157,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     paddingTop: 20,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
     marginBottom: 4,
-    color: "#1a1a1a",
   },
   subtitle: {
     fontSize: 14,
-    textAlign: "center",
-    marginBottom: 16,
-    color: "#666",
+    marginBottom: 0,
+  },
+  themeToggle: {
+    padding: 8,
+  },
+  themeIcon: {
+    fontSize: 28,
   },
   searchContainer: {
     flexDirection: 'row',
