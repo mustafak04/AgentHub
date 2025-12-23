@@ -760,6 +760,20 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ QR KOD AGENT (agentId === '20') ============
+    if (agentId === '20' && aiResponse.includes('[QR:')) {
+      const match = aiResponse.match(/\[QR:(.*?)\]/);
+      if (match) {
+        const content = match[1].trim();
+        console.log(`📱 QR Kod: ${content}`);
+        // QR Server API (ücretsiz, key yok)
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(content)}`;
+
+        aiResponse = `📱 **QR Kod oluşturuldu:**\n\n![QR Kod](${qrUrl})\n\n🔗 İçerik: ${content}`;
+
+        console.log('✅ QR kod oluşturuldu');
+      }
+    }
     return {
       success: true,
       response: aiResponse
