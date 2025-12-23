@@ -715,6 +715,51 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ YEMEK TARİFİ AGENT (agentId === '17') ============
+    if (agentId === '17' && aiResponse.includes('[RECIPE:')) {
+      const match = aiResponse.match(/\[RECIPE:(.*?)\]/);
+      if (match) {
+        const query = match[1].trim();
+        console.log(`🍳 Tarif: ${query}`);
+        try {
+          const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
+          if (!SPOONACULAR_API_KEY) throw new Error('SPOONACULAR_API_KEY tanımlı değil');
+          const response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
+            params: {
+              apiKey: SPOONACULAR_API_KEY,
+              query: query,
+              number: 3,
+              addRecipeInformation: true
+            }
+          });
+          const recipes = response.data.results || [];
+          if (!recipes.length) {
+            aiResponse = `"${query}" için tarif bulunamadı.`;
+          } else {
+            let recipeList = `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
+            recipes.forEach((recipe, index) => {
+              const title = recipe.title;
+              const readyInMinutes = recipe.readyInMinutes || 'N/A';
+              const servings = recipe.servings || 'N/A';
+              const image = recipe.image || '';
+              const summary = recipe.summary?.replace(/<[^>]*>/g, '').substring(0, 150) || 'Açıklama yok';
+              recipeList += `**${index + 1}. ${title}**\n`;
+              recipeList += `⏱️ ${readyInMinutes} dk • 👥 ${servings} kişilik\n`;
+              recipeList += `📝 ${summary}...\n`;
+              if (image) {
+                recipeList += `![${title}](${image})\n`;
+              }
+              recipeList += `\n`;
+            });
+            aiResponse = recipeList;
+          }
+          console.log('✅ Tarif sonuçları döndürüldü');
+        } catch (recipeError) {
+          console.error('❌ Spoonacular API hatası:', recipeError.message);
+          aiResponse = 'Üzgünüm, tarif araması yapılamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse

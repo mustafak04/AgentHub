@@ -18,6 +18,7 @@ const agents = [
   { id: '14', name: 'Müzik Agent', description: "Sanatçı ve şarkı arar", emoji: '🎵', color: '#9B59B6' },
   { id: '15', name: 'Podcast Agent', description: "Podcast arar, önerir", emoji: '🎙️', color: '#E67E22' },
   { id: '16', name: 'Oyun Agent', description: "Oyun arar, bilgi verir", emoji: '🎮', color: '#16A085' },
+  { id: '17', name: 'Yemek Agent', description: "Tarif arar, önerir", emoji: '🍳', color: '#E74C3C' },
 ];
 
 export default function Individual() {

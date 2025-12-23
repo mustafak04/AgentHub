@@ -286,6 +286,19 @@ KURALLAR:
 - "the witcher 3" → [GAME:the witcher 3]
 - "valorant" → [GAME:valorant]
 Net oyun adı!`,
+
+  // YEMEK TARİFİ AGENT (Agent 17)
+  recipeSearch: `Sen bir yemek tarifi asistanısın. Kullanıcı tarif aradığında: [RECIPE:yemek_adı]
+KURALLAR:
+1. Yemek adını yaz
+2. Türkçe ise İngilizce'ye çevir
+3. Sadece [RECIPE:yemek_adı] formatı
+ÖRNEKLER:
+- "makarna tarifi" → [RECIPE:pasta]
+- "chocolate cake" → [RECIPE:chocolate cake]
+- "tavuk çorbası" → [RECIPE:chicken soup]
+- "pizza" → [RECIPE:pizza]
+Net yemek adı!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -306,7 +319,8 @@ function getAgentPrompt(agentId) {
     '13': agentPrompts.movieSearch,
     '14': agentPrompts.musicSearch,
     '15': agentPrompts.podcastSearch,
-    '16': agentPrompts.gameSearch
+    '16': agentPrompts.gameSearch,
+    '17': agentPrompts.recipeSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
