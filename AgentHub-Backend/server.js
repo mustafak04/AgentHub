@@ -442,6 +442,57 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
       }
       // Kısa metinler için Gemini'nin normal cevabını kullan
     }
+    // ============ SÖZLÜK AGENT (agentId === '12') ============
+    if (agentId === '12' && aiResponse.includes('[DICT:')) {
+      const match = aiResponse.match(/\[DICT:(.*?)\|(.*?)\]/);
+      if (match) {
+        const word = match[1].trim().toLowerCase();
+        const lang = match[2].trim();
+        console.log(`📖 Sözlük: ${word} (${lang})`);
+        try {
+          const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${word}`);
+          const data = response.data[0];
+          if (!data) {
+            aiResponse = `"${word}" kelimesi bulunamadı.`;
+          } else {
+            const meanings = data.meanings;
+            let dictResponse = `📖 **${word}**\n\n`;
+            // Telaffuz
+            if (data.phonetic || data.phonetics?.[0]?.text) {
+              const phonetic = data.phonetic || data.phonetics[0].text;
+              dictResponse += `🔊 Telaffuz: ${phonetic}\n\n`;
+            }
+            // Anlamlar
+            meanings.forEach((meaning, idx) => {
+              dictResponse += `**${idx + 1}. ${meaning.partOfSpeech}**\n`;
+
+              meaning.definitions.slice(0, 3).forEach((def, i) => {
+                dictResponse += `   ${i + 1}. ${def.definition}\n`;
+                if (def.example) {
+                  dictResponse += `      💬 "${def.example}"\n`;
+                }
+              });
+              dictResponse += `\n`;
+            });
+            // Eş anlamlılar
+            if (meanings[0].synonyms?.length > 0) {
+              const synonyms = meanings[0].synonyms.slice(0, 5).join(', ');
+              dictResponse += `🔗 Eş anlamlı: ${synonyms}\n`;
+            }
+            aiResponse = dictResponse;
+          }
+          console.log('✅ Sözlük sonucu döndürüldü');
+        } catch (dictError) {
+          console.error('❌ Sözlük API hatası:', dictError.message);
+
+          if (dictError.response?.status === 404) {
+            aiResponse = `"${word}" kelimesi sözlükte bulunamadı. (Sadece İngilizce desteklenir)`;
+          } else {
+            aiResponse = 'Üzgünüm, sözlük araması yapılamadı.';
+          }
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse

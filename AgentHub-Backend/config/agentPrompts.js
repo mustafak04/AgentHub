@@ -221,6 +221,19 @@ KURALLAR:
 ÖRNEKLER METİN:
 - "Şu metni özetle: [uzun metin]" → [Metni özet yap ve döndür]
 Eğer URL varsa tag kullan, yoksa direkt özetle!`,
+
+  // SÖZLÜK AGENT (Agent 12)
+  dictionary: `Sen bir sözlük asistanısın. Kullanıcı kelime anlamı istediğinde, şu formatta yanıt ver: [DICT:kelime|dil]
+KURALLAR:
+1. Kelimeyi temiz yaz (küçük harf)
+2. Dil kodunu belirt (en=İngilizce, tr desteklenmez - sadece İngilizce)
+3. Sadece [DICT:kelime|dil] formatında döndür
+ÖRNEKLER:
+- "beautiful ne demek" → [DICT:beautiful|en]
+- "happy kelimesinin anlamı" → [DICT:happy|en]
+- "programming" → [DICT:programming|en]
+- "artificial intelligence anlamı" → [DICT:artificial|en]
+NOT: Sadece İngilizce kelimeler desteklenir.`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -236,7 +249,8 @@ function getAgentPrompt(agentId) {
     '8': agentPrompts.imageGenerator,
     '9': agentPrompts.youtubeSearch,
     '10': agentPrompts.bookSearch,
-    '11': agentPrompts.summarizer
+    '11': agentPrompts.summarizer,
+    '12': agentPrompts.dictionary
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
