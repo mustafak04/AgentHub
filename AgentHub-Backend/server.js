@@ -463,13 +463,13 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               dictResponse += `🔊 Telaffuz: ${phonetic}\n\n`;
             }
             // Anlamlar
-            meanings.forEach((meaning, idx) => {
+            meanings.slice(0, 2).forEach((meaning, idx) => {
               dictResponse += `**${idx + 1}. ${meaning.partOfSpeech}**\n`;
 
-              meaning.definitions.slice(0, 3).forEach((def, i) => {
-                dictResponse += `   ${i + 1}. ${def.definition}\n`;
+              meaning.definitions.slice(0, 2).forEach((def, i) => {
+                dictResponse += `• ${def.definition}\n`;
                 if (def.example) {
-                  dictResponse += `      💬 "${def.example}"\n`;
+                  dictResponse += `_Örnek: "${def.example}"_\n`;
                 }
               });
               dictResponse += `\n`;
