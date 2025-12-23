@@ -619,50 +619,53 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
       if (match) {
         const query = match[1].trim();
         console.log(`🎙️ Podcast: ${query}`);
+
         try {
           const LISTENNOTES_API_KEY = process.env.LISTENNOTES_API_KEY;
           if (!LISTENNOTES_API_KEY) throw new Error('LISTENNOTES_API_KEY tanımlı değil');
+
           const response = await axios.get('https://listen-api.listennotes.com/api/v2/search', {
             params: {
               q: query,
-              type: 'podcast',
-              language: 'Turkish,English',
-              only_in: 'title,description'
+              type: 'podcast'
             },
             headers: {
               'X-ListenAPI-Key': LISTENNOTES_API_KEY
             }
           });
-          const podcasts = response.data.results.slice(0, 5);
+
+          console.log('📡 API Response:', JSON.stringify(response.data).substring(0, 200)); // DEBUG
+
+          const podcasts = response.data.results || [];
+
           if (!podcasts.length) {
-            aiResponse = `"${query}" için podcast bulunamadı.`;
+            aiResponse = `"${query}" için podcast bulunamadı. (Toplam: ${response.data.total || 0})`;
           } else {
             let podcastList = `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
-            podcasts.forEach((podcast, index) => {
-              const title = podcast.title_original || podcast.title;
-              const publisher = podcast.publisher_original || 'Bilinmiyor';
-              const description = podcast.description_original?.substring(0, 150) + '...' || 'Açıklama yok';
-              const thumbnail = podcast.thumbnail || podcast.image;
-              const listenUrl = podcast.listen_score_global_rank
-                ? `https://www.listennotes.com/podcasts/${podcast.id}`
-                : '';
+
+            podcasts.slice(0, 5).forEach((podcast, index) => {
+              const title = podcast.title_original || podcast.title_highlighted || podcast.title || 'Başlık yok';
+              const publisher = podcast.publisher_original || podcast.publisher_highlighted || 'Bilinmiyor';
+              const description = (podcast.description_original || podcast.description_highlighted || 'Açıklama yok').substring(0, 150);
+              const thumbnail = podcast.thumbnail || podcast.image || '';
+
               podcastList += `**${index + 1}. ${title}**\n`;
               podcastList += `🎤 ${publisher}\n`;
-              podcastList += `📝 ${description}\n`;
-              if (listenUrl) {
-                podcastList += `[🔗 Dinle](${listenUrl})\n`;
-              }
+              podcastList += `📝 ${description}...\n`;
               if (thumbnail) {
                 podcastList += `![${title}](${thumbnail})\n`;
               }
               podcastList += `\n`;
             });
+
             aiResponse = podcastList;
           }
+
           console.log('✅ Podcast sonuçları döndürüldü');
         } catch (podcastError) {
           console.error('❌ Listen Notes API hatası:', podcastError.message);
-          aiResponse = 'Üzgünüm, podcast araması yapılamadı.';
+          console.error('❌ Response:', podcastError.response?.data);
+          aiResponse = `Hata: ${podcastError.message}`;
         }
       }
     }
