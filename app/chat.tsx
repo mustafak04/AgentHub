@@ -8,6 +8,7 @@ import Markdown from 'react-native-markdown-display';
 
 // Backend URL'si
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
+
 export default function Chat() {
   // URL'den gelen parametreleri al (agentId ve agentName)
   const { agentId, agentName } = useLocalSearchParams();

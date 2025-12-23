@@ -3,6 +3,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
 const STORAGE_KEY = "chat_history_coordinate";
 export default function Coordinate() {
@@ -91,7 +92,7 @@ export default function Coordinate() {
       setLoading(false);
     }
   };
-  
+
   const renderMessage = ({ item }: { item: typeof messages[0] }) => (
     <View style={[styles.messageBubble, item.sender === "user" ? styles.userBubble : styles.agentBubble]}>
       <Text style={[styles.messageText, item.sender === "user" && { color: "#fff" }]}>{item.text}</Text>
@@ -99,8 +100,8 @@ export default function Coordinate() {
   );
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={90}
     >
@@ -111,11 +112,11 @@ export default function Coordinate() {
         </TouchableOpacity>
       </View>
 
-      <FlatList 
-        data={messages} 
-        renderItem={renderMessage} 
-        keyExtractor={(item) => item.id} 
-        contentContainerStyle={styles.messageList} 
+      <FlatList
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.messageList}
       />
 
       {loading && (
@@ -126,17 +127,17 @@ export default function Coordinate() {
       )}
 
       <View style={styles.inputContainer}>
-        <TextInput 
-          style={styles.input} 
-          placeholder="Mesajınızı yazın..." 
-          value={inputText} 
-          onChangeText={setInputText} 
+        <TextInput
+          style={styles.input}
+          placeholder="Mesajınızı yazın..."
+          value={inputText}
+          onChangeText={setInputText}
           editable={!loading}
           multiline
         />
-        <TouchableOpacity 
-          style={[styles.sendButton, loading && { opacity: 0.5 }]} 
-          onPress={sendMessage} 
+        <TouchableOpacity
+          style={[styles.sendButton, loading && { opacity: 0.5 }]}
+          onPress={sendMessage}
           disabled={loading}
         >
           <Text style={styles.sendButtonText}>Gönder</Text>

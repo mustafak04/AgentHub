@@ -8,7 +8,6 @@ const { getAgentPrompt } = require('./config/agentPrompts');
 // Express uygulaması oluştur
 const app = express();
 const PORT = process.env.PORT || 3000;
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
 // Middleware'ler
 app.use(cors());
