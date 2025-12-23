@@ -543,6 +543,76 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ MÜZİK AGENT (agentId === '14') ============
+    if (agentId === '14' && aiResponse.includes('[MUSIC:')) {
+      const match = aiResponse.match(/\[MUSIC:(.*?)\]/);
+      if (match) {
+        const query = match[1].trim();
+        console.log(`🎵 Müzik: ${query}`);
+        try {
+          const LASTFM_API_KEY = process.env.LASTFM_API_KEY;
+          if (!LASTFM_API_KEY) throw new Error('LASTFM_API_KEY tanımlı değil');
+          // Hem sanatçı hem şarkı ara
+          const [artistRes, trackRes] = await Promise.all([
+            axios.get('https://ws.audioscrobbler.com/2.0/', {
+              params: {
+                method: 'artist.search',
+                artist: query,
+                api_key: LASTFM_API_KEY,
+                format: 'json',
+                limit: 3
+              }
+            }),
+            axios.get('https://ws.audioscrobbler.com/2.0/', {
+              params: {
+                method: 'track.search',
+                track: query,
+                api_key: LASTFM_API_KEY,
+                format: 'json',
+                limit: 3
+              }
+            })
+          ]);
+          const artists = artistRes.data.results?.artistmatches?.artist || [];
+          const tracks = trackRes.data.results?.trackmatches?.track || [];
+          if (!artists.length && !tracks.length) {
+            aiResponse = `"${query}" için sonuç bulunamadı.`;
+          } else {
+            let musicList = `🎵 **"${query}" için sonuçlar:**\n\n`;
+            // Sanatçılar
+            if (artists.length) {
+              musicList += `**🎤 Sanatçılar:**\n`;
+              artists.slice(0, 3).forEach((artist, i) => {
+                const listeners = formatNumber(artist.listeners || '0');
+                musicList += `${i + 1}. **${artist.name}**\n`;
+                musicList += `   👥 ${listeners} dinleyici\n`;
+                if (artist.image?.[2]?.['#text']) {
+                  musicList += `   ![${artist.name}](${artist.image[2]['#text']})\n`;
+                }
+              });
+              musicList += `\n`;
+            }
+            // Şarkılar
+            if (tracks.length) {
+              musicList += `**🎧 Şarkılar:**\n`;
+              tracks.slice(0, 3).forEach((track, i) => {
+                const listeners = formatNumber(track.listeners || '0');
+                musicList += `${i + 1}. **${track.name}** - ${track.artist}\n`;
+                musicList += `   👥 ${listeners} dinleyici\n`;
+                if (track.image?.[2]?.['#text']) {
+                  musicList += `   ![${track.name}](${track.image[2]['#text']})\n`;
+                }
+              });
+            }
+            aiResponse = musicList;
+          }
+          console.log('✅ Müzik sonuçları döndürüldü');
+        } catch (musicError) {
+          console.error('❌ Last.fm API hatası:', musicError.message);
+          aiResponse = 'Üzgünüm, müzik araması yapılamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
