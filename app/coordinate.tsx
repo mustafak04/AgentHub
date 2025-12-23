@@ -2,11 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useTheme } from './context/ThemeContext';
 
 
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
 const STORAGE_KEY = "chat_history_coordinate";
+
 export default function Coordinate() {
+  const { colors, isDark } = useTheme();
   const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -93,20 +96,41 @@ export default function Coordinate() {
     }
   };
 
-  const renderMessage = ({ item }: { item: typeof messages[0] }) => (
-    <View style={[styles.messageBubble, item.sender === "user" ? styles.userBubble : styles.agentBubble]}>
-      <Text style={[styles.messageText, item.sender === "user" && { color: "#fff" }]}>{item.text}</Text>
-    </View>
-  );
+  const renderMessage = ({ item }: { item: typeof messages[0] }) => {
+    if (item.sender === "user") {
+      return (
+        <View style={[styles.messageBubble, styles.userBubble]}>
+          <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
+        </View>
+      );
+    } else {
+      // AI message - CSS glassmorphism
+      return (
+        <View
+          style={[
+            styles.messageBubble,
+            styles.agentBubble,
+            {
+              backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+            }
+          ]}
+        >
+          <Text style={[styles.messageText, { color: colors.text }]}>{item.text}</Text>
+        </View>
+      );
+    }
+  };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={90}
     >
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>🤝 Koordine Mod</Text>
+      <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.header, { color: colors.text }]}>🤝 Koordine Mod</Text>
         <TouchableOpacity onPress={clearChatHistory} style={styles.clearButton}>
           <Text style={styles.clearButtonText}>🗑️ Temizle</Text>
         </TouchableOpacity>
@@ -126,10 +150,11 @@ export default function Coordinate() {
         </View>
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.input, color: colors.text, borderColor: colors.border }]}
           placeholder="Mesajınızı yazın..."
+          placeholderTextColor={colors.textSecondary}
           value={inputText}
           onChangeText={setInputText}
           editable={!loading}
@@ -148,20 +173,20 @@ export default function Coordinate() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#ddd" },
+  container: { flex: 1 },
+  headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   header: { fontSize: 20, fontWeight: "bold" },
   clearButton: { padding: 8 },
   clearButtonText: { fontSize: 14, color: "#FF3B30" },
   messageList: { paddingHorizontal: 16, paddingVertical: 8 },
   messageBubble: { maxWidth: "75%", padding: 12, borderRadius: 16, marginVertical: 4 },
   userBubble: { alignSelf: "flex-end", backgroundColor: "#007AFF" },
-  agentBubble: { alignSelf: "flex-start", backgroundColor: "#E5E5EA" },
-  messageText: { fontSize: 16, color: "#000" },
+  agentBubble: { alignSelf: "flex-start", overflow: 'hidden' },
+  messageText: { fontSize: 16 },
   loadingContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 8 },
   loadingText: { marginLeft: 8, color: "#007AFF" },
-  inputContainer: { flexDirection: "row", padding: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#ddd" },
-  input: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
+  inputContainer: { flexDirection: "row", padding: 16, borderTopWidth: 1 },
+  input: { flex: 1, borderWidth: 1, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
   sendButton: { backgroundColor: "#007AFF", borderRadius: 20, paddingHorizontal: 20, justifyContent: "center" },
   sendButtonText: { color: "#fff", fontWeight: "600" },
 });

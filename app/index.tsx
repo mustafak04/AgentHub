@@ -1,6 +1,6 @@
 import auth from '@react-native-firebase/auth';
 import { Link, router } from 'expo-router';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from './context/ThemeContext';
 
 export default function HomeScreen() {
@@ -36,46 +36,103 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Kullanıcı Bilgisi Kartı */}
+      {/* Header */}
       <View style={styles.userCard}>
         <View style={styles.userInfo}>
           <Text style={styles.welcomeText}>👋 Hoş Geldin!</Text>
           <Text style={styles.emailText}>{user?.email}</Text>
         </View>
         <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
-            <Text style={styles.themeIcon}>{isDark ? '☀️' : '🌙'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>🚪 Çıkış</Text>
-          </TouchableOpacity>
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.headerButtonPressed
+            ]}
+            onPress={toggleTheme}
+          >
+            {({ pressed }) => (
+              <Animated.View style={{ transform: [{ scale: pressed ? 0.95 : 1 }] }}>
+                <Text style={styles.headerButtonIcon}>{isDark ? '☀️' : '🌙'}</Text>
+              </Animated.View>
+            )}
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.headerButtonPressed
+            ]}
+            onPress={handleLogout}
+          >
+            {({ pressed }) => (
+              <Animated.View style={{ transform: [{ scale: pressed ? 0.95 : 1 }] }}>
+                <Text style={styles.headerButtonText}>🚪</Text>
+              </Animated.View>
+            )}
+          </Pressable>
         </View>
       </View>
 
-      {/* Ana Sayfa İçeriği */}
+      {/* Content */}
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>🤖 AgentHub</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Yapay Zeka Agent'larınız</Text>
 
         <View style={styles.cardContainer}>
           <Link href="/individual" asChild>
-            <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={styles.cardIcon}>👤</Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Bireysel Mod</Text>
-              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                Tek bir agent ile sohbet et
-              </Text>
-            </TouchableOpacity>
+            <Pressable>
+              {({ pressed }) => (
+                <Animated.View style={{ transform: [{ scale: pressed ? 0.98 : 1 }] }}>
+                  {/* CSS Glassmorphism Card */}
+                  <View
+                    style={[
+                      styles.glassCard,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(45, 45, 45, 0.95)'
+                          : 'rgba(255, 255, 255, 0.95)',
+                        borderColor: isDark
+                          ? 'rgba(255, 255, 255, 0.15)'
+                          : 'rgba(0, 0, 0, 0.08)',
+                      }
+                    ]}
+                  >
+                    <Text style={styles.cardIcon}>👤</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>Bireysel Mod</Text>
+                    <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+                      Tek bir agent ile sohbet et
+                    </Text>
+                  </View>
+                </Animated.View>
+              )}
+            </Pressable>
           </Link>
 
           <Link href="/coordinate" asChild>
-            <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={styles.cardIcon}>🤝</Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Koordinatör Mod</Text>
-              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                Birden fazla agent koordine et
-              </Text>
-            </TouchableOpacity>
+            <Pressable>
+              {({ pressed }) => (
+                <Animated.View style={{ transform: [{ scale: pressed ? 0.98 : 1 }] }}>
+                  <View
+                    style={[
+                      styles.glassCard,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(45, 45, 45, 0.95)'
+                          : 'rgba(255, 255, 255, 0.95)',
+                        borderColor: isDark
+                          ? 'rgba(255, 255, 255, 0.15)'
+                          : 'rgba(0, 0, 0, 0.08)',
+                      }
+                    ]}
+                  >
+                    <Text style={styles.cardIcon}>🤝</Text>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>Koordinatör Mod</Text>
+                    <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+                      Birden fazla agent koordine et
+                    </Text>
+                  </View>
+                </Animated.View>
+              )}
+            </Pressable>
           </Link>
         </View>
       </View>
@@ -97,11 +154,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   userInfo: {
     flex: 1,
@@ -120,69 +183,74 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  themeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+  headerButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  themeIcon: {
+  headerButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  headerButtonIcon: {
+    fontSize: 22,
+  },
+  headerButtonText: {
     fontSize: 20,
-  },
-  logoutButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  logoutButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   content: {
     flex: 1,
     padding: 20,
   },
   title: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 30,
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 50,
   },
   cardContainer: {
     gap: 20,
   },
-  card: {
-    padding: 25,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+  glassCard: {
+    padding: 30,
+    borderRadius: 24,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   cardIcon: {
-    fontSize: 48,
-    marginBottom: 15,
+    fontSize: 56,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   cardTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   cardDescription: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
+    textAlign: 'center',
   },
 });

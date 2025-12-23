@@ -11,7 +11,7 @@ import { useTheme } from './context/ThemeContext';
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
 
 export default function Chat() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   // URL'den gelen parametreleri al (agentId ve agentName)
   const { agentId, agentName } = useLocalSearchParams();
 
@@ -117,25 +117,43 @@ export default function Chat() {
   };
 
   // Mesaj balonları
-  const renderMessage = ({ item }: { item: typeof messages[0] }) => (
-    <View style={[styles.messageBubble, item.sender === "user" ? styles.userBubble : [styles.agentBubble, { backgroundColor: colors.card }]]}>
-      {item.sender === "user" ? (
-        <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
-      ) : (
-        <Markdown style={{
-          body: { color: colors.text, fontSize: 16 },
-          code_inline: { backgroundColor: colors.input, color: '#d63384', fontFamily: 'monospace' },
-          code_block: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-          fence: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-          heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-          strong: { fontWeight: 'bold' },
-          em: { fontStyle: 'italic' },
-        }}>
-          {item.text}
-        </Markdown>
-      )}
-    </View>
-  );
+  const renderMessage = ({ item }: { item: typeof messages[0] }) => {
+    if (item.sender === "user") {
+      // User message - solid gradient bubble
+      return (
+        <View style={[styles.messageBubble, styles.userBubble]}>
+          <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
+        </View>
+      );
+    } else {
+      // AI message - CSS glassmorphism bubble
+      return (
+        <View
+          style={[
+            styles.messageBubble,
+            styles.agentBubble,
+            {
+              backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+            }
+          ]}
+        >
+          <Markdown style={{
+            body: { color: colors.text, fontSize: 16 },
+            code_inline: { backgroundColor: colors.input, color: '#d63384', fontFamily: 'monospace' },
+            code_block: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+            fence: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+            heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+            strong: { fontWeight: 'bold' },
+            em: { fontStyle: 'italic' },
+          }}>
+            {item.text}
+          </Markdown>
+        </View>
+      );
+    }
+  };
 
   return (
     <KeyboardAvoidingView

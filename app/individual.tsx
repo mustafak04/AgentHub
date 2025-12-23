@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "./context/ThemeContext";
 
 const agents = [
@@ -41,7 +41,7 @@ const categories = [
 
 export default function Individual() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -90,8 +90,19 @@ export default function Individual() {
       </Text>
 
 
-      {/* Arama Çubuğu */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+
+
+
+      {/* Arama Çubuğu - CSS Glassmorphism */}
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+          }
+        ]}
+      >
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
@@ -244,12 +255,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
     marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
     flexDirection: "row",
     alignItems: "center",
   },
