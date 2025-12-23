@@ -234,6 +234,19 @@ KURALLAR:
 - "programming" → [DICT:programming|en]
 - "artificial intelligence anlamı" → [DICT:artificial|en]
 NOT: Sadece İngilizce kelimeler desteklenir.`,
+
+  // FİLM/DİZİ AGENT (Agent 13)
+  movieSearch: `Sen bir film/dizi arama asistanısın. Kullanıcı film veya dizi aradığında, şu formatta yanıt ver: [MOVIE:başlık]
+KURALLAR:
+1. Film/dizi adını temiz yaz
+2. Türkçe ise İngilizce'ye çevir (daha iyi sonuçlar)
+3. Sadece [MOVIE:başlık] formatında döndür
+ÖRNEKLER:
+- "inception filmi" → [MOVIE:inception]
+- "breaking bad dizisi" → [MOVIE:breaking bad]
+- "yüzüklerin efendisi" → [MOVIE:lord of the rings]
+- "fight club" → [MOVIE:fight club]
+Kısa ve net başlık kullan!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -250,7 +263,8 @@ function getAgentPrompt(agentId) {
     '9': agentPrompts.youtubeSearch,
     '10': agentPrompts.bookSearch,
     '11': agentPrompts.summarizer,
-    '12': agentPrompts.dictionary
+    '12': agentPrompts.dictionary,
+    '13': agentPrompts.movieSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';

@@ -493,6 +493,56 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ FİLM/DİZİ AGENT (agentId === '13') ============
+    if (agentId === '13' && aiResponse.includes('[MOVIE:')) {
+      const match = aiResponse.match(/\[MOVIE:(.*?)\]/);
+      if (match) {
+        const query = match[1].trim();
+        console.log(`🎬 Film/Dizi: ${query}`);
+        try {
+          const TMDB_API_KEY = process.env.TMDB_API_KEY;
+          if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY tanımlı değil');
+          const response = await axios.get('https://api.themoviedb.org/3/search/multi', {
+            params: {
+              api_key: TMDB_API_KEY,
+              query: query,
+              language: 'tr-TR',
+              page: 1
+            }
+          });
+          const results = response.data.results.slice(0, 5);
+          if (!results.length) {
+            aiResponse = `"${query}" için sonuç bulunamadı.`;
+          } else {
+            let movieList = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
+            results.forEach((item, index) => {
+              const title = item.title || item.name;
+              const type = item.media_type === 'movie' ? '🎥 Film' : '📺 Dizi';
+              const year = (item.release_date || item.first_air_date || '').split('-')[0];
+              const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+              const overview = item.overview
+                ? item.overview.substring(0, 150) + '...'
+                : 'Açıklama yok';
+              const poster = item.poster_path
+                ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+                : '';
+              movieList += `**${index + 1}. ${title}** (${year})\n`;
+              movieList += `${type} • ⭐ ${rating}/10\n`;
+              movieList += `📝 ${overview}\n`;
+              if (poster) {
+                movieList += `![${title}](${poster})\n`;
+              }
+              movieList += `\n`;
+            });
+            aiResponse = movieList;
+          }
+          console.log('✅ Film/Dizi sonuçları döndürüldü');
+        } catch (tmdbError) {
+          console.error('❌ TMDB API hatası:', tmdbError.message);
+          aiResponse = 'Üzgünüm, film/dizi araması yapılamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
