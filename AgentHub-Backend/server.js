@@ -413,7 +413,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
             const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:
 ${limitedText}`;
-            const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
             const summaryResult = await summaryModel.generateContent(summaryPrompt);
             const summary = summaryResult.response.text();
             aiResponse = `📝 **Özet:**
