@@ -222,9 +222,7 @@ ${fromCurrency} → ${toCurrency}
           const encodedPrompt = encodeURIComponent(prompt);
           const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
 
-          aiResponse = `🎨 **Görsel Oluşturuldu!**
-
-${imageUrl}
+          aiResponse = `![AI Generated Image](${imageUrl})
 
 Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
