@@ -218,8 +218,7 @@ ${fromCurrency} → ${toCurrency}
         console.log(`🎨 Görsel oluşturuluyor: ${prompt.substring(0, 50)}...`);
 
         try {
-          // Gemini'nin Imagen 3 modelini kullan
-          const imageModel = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+          const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
 
           const result = await imageModel.generateContent({
             prompt: prompt,
