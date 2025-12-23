@@ -224,9 +224,6 @@ ${fromCurrency} → ${toCurrency}
 
           aiResponse = `🎨 **Görsel Oluşturuldu!**
 
-**Prompt:** ${prompt}
-
-🖼️ **Görsel Linki:**
 ${imageUrl}
 
 Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
