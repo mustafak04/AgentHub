@@ -22,6 +22,7 @@ const agents = [
   { id: '18', name: 'Fitness Agent', description: "Antrenman planı, egzersiz önerir", emoji: '💪', color: '#27AE60' },
   { id: '19', name: 'Motivasyon Agent', description: "İlham verir, cesaretlendirir", emoji: '🌟', color: '#F39C12' },
   { id: '20', name: 'QR Kod Agent', description: "QR kod oluşturur", emoji: '📱', color: '#34495E' },
+  { id: '21', name: 'IP Agent', description: "IP konum bilgisi verir", emoji: '🌍', color: '#2C3E50' },
 ];
 
 export default function Individual() {

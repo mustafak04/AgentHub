@@ -362,6 +362,19 @@ KURALLAR:
 - "instagram.com/profile qr yap" → [QR:https://instagram.com/profile]
 - "bu metni qr yap: test123" → [QR:test123]
 Net içerik!`,
+
+  // IP BİLGİSİ AGENT (Agent 21)
+  ipInfo: `Sen bir IP bilgisi asistanısın. Kullanıcı IP sorguladığında: [IP:ip_adresi]
+KURALLAR:
+1. IP adresini net yaz
+2. Boş ise kullanıcının kendi IP'si
+3. Sadece [IP:adres] formatı
+ÖRNEKLER:
+- "ip bilgim" → [IP:self]
+- "8.8.8.8 ip bilgisi" → [IP:8.8.8.8]
+- "1.1.1.1 nereden" → [IP:1.1.1.1]
+- "kendi ipim" → [IP:self]
+Net IP!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -386,7 +399,8 @@ function getAgentPrompt(agentId) {
     '17': agentPrompts.recipeSearch,
     '18': agentPrompts.fitness,
     '19': agentPrompts.motivation,
-    '20': agentPrompts.qrCode
+    '20': agentPrompts.qrCode,
+    '21': agentPrompts.ipInfo
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';

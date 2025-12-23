@@ -774,6 +774,38 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         console.log('✅ QR kod oluşturuldu');
       }
     }
+    // ============ IP BİLGİSİ AGENT (agentId === '21') ============
+    if (agentId === '21' && aiResponse.includes('[IP:')) {
+      const match = aiResponse.match(/\[IP:(.*?)\]/);
+      if (match) {
+        const ip = match[1].trim();
+        console.log(`🌍 IP Bilgisi: ${ip}`);
+        try {
+          // ipapi.co - ücretsiz, key yok
+          const url = ip === 'self'
+            ? 'https://ipapi.co/json/'
+            : `https://ipapi.co/${ip}/json/`;
+          const response = await axios.get(url);
+          const data = response.data;
+          if (data.error) {
+            aiResponse = `IP bilgisi alınamadı: ${data.reason}`;
+          } else {
+            aiResponse = `🌍 **IP Bilgisi:**\n\n`;
+            aiResponse += `📍 IP: ${data.ip}\n`;
+            aiResponse += `🏙️ Şehir: ${data.city || 'Bilinmiyor'}\n`;
+            aiResponse += `🗺️ Bölge: ${data.region || 'Bilinmiyor'}\n`;
+            aiResponse += `🌐 Ülke: ${data.country_name || 'Bilinmiyor'} (${data.country || ''})\n`;
+            aiResponse += `🧭 Koordinat: ${data.latitude}, ${data.longitude}\n`;
+            aiResponse += `🌐 ISP: ${data.org || 'Bilinmiyor'}\n`;
+            aiResponse += `⏰ Zaman Dilimi: ${data.timezone || 'Bilinmiyor'}`;
+          }
+          console.log('✅ IP bilgisi alındı');
+        } catch (ipError) {
+          console.error('❌ IP API hatası:', ipError.message);
+          aiResponse = 'Üzgünüm, IP bilgisi alınamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
