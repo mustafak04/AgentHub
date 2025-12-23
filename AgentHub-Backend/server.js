@@ -669,6 +669,52 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ OYUN BİLGİSİ AGENT (agentId === '16') ============
+    if (agentId === '16' && aiResponse.includes('[GAME:')) {
+      const match = aiResponse.match(/\[GAME:(.*?)\]/);
+      if (match) {
+        const query = match[1].trim();
+        console.log(`🎮 Oyun: ${query}`);
+        try {
+          const RAWG_API_KEY = process.env.RAWG_API_KEY;
+          if (!RAWG_API_KEY) throw new Error('RAWG_API_KEY tanımlı değil');
+          const response = await axios.get('https://api.rawg.io/api/games', {
+            params: {
+              key: RAWG_API_KEY,
+              search: query,
+              page_size: 5
+            }
+          });
+          const games = response.data.results || [];
+          if (!games.length) {
+            aiResponse = `"${query}" için oyun bulunamadı.`;
+          } else {
+            let gameList = `🎮 **"${query}" için ${games.length} oyun:**\n\n`;
+            games.forEach((game, index) => {
+              const title = game.name;
+              const rating = game.rating ? game.rating.toFixed(1) : 'N/A';
+              const released = game.released || 'Bilinmiyor';
+              const platforms = game.platforms?.map(p => p.platform.name).slice(0, 3).join(', ') || 'N/A';
+              const genres = game.genres?.map(g => g.name).slice(0, 2).join(', ') || 'N/A';
+              const screenshot = game.background_image || '';
+              gameList += `**${index + 1}. ${title}**\n`;
+              gameList += `⭐ ${rating}/5 • 📅 ${released}\n`;
+              gameList += `🎮 ${platforms}\n`;
+              gameList += `🏷️ ${genres}\n`;
+              if (screenshot) {
+                gameList += `![${title}](${screenshot})\n`;
+              }
+              gameList += `\n`;
+            });
+            aiResponse = gameList;
+          }
+          console.log('✅ Oyun sonuçları döndürüldü');
+        } catch (gameError) {
+          console.error('❌ RAWG API hatası:', gameError.message);
+          aiResponse = 'Üzgünüm, oyun araması yapılamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse

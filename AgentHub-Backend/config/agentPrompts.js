@@ -273,6 +273,19 @@ KURALLAR:
 - "the daily" → [PODCAST:the daily]
 - "true crime" → [PODCAST:true crime]
 Kısa ve net!`,
+
+  // OYUN BİLGİSİ AGENT (Agent 16)
+  gameSearch: `Sen bir oyun arama asistanısın. Kullanıcı oyun aradığında: [GAME:oyun_adı]
+KURALLAR:
+1. Oyun adını temiz yaz
+2. Kısa ve net
+3. Sadece [GAME:oyun_adı] formatı
+ÖRNEKLER:
+- "minecraft" → [GAME:minecraft]
+- "gta 5" → [GAME:gta 5]
+- "the witcher 3" → [GAME:the witcher 3]
+- "valorant" → [GAME:valorant]
+Net oyun adı!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -292,7 +305,8 @@ function getAgentPrompt(agentId) {
     '12': agentPrompts.dictionary,
     '13': agentPrompts.movieSearch,
     '14': agentPrompts.musicSearch,
-    '15': agentPrompts.podcastSearch
+    '15': agentPrompts.podcastSearch,
+    '16': agentPrompts.gameSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
