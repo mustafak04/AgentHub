@@ -241,7 +241,9 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         try {
           const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
           if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY tanımlı değil');
-          const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+
+          // 1. Video ara
+          const searchResponse = await axios.get('https://www.googleapis.com/youtube/v3/search', {
             params: {
               part: 'snippet',
               q: searchQuery,
@@ -250,24 +252,53 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               key: YOUTUBE_API_KEY
             }
           });
-          const videos = response.data.items;
+
+          const videos = searchResponse.data.items;
+
           if (!videos.length) {
             aiResponse = `"${searchQuery}" için video bulunamadı.`;
           } else {
+            // 2. Video ID'lerini topla
+            const videoIds = videos.map(v => v.id.videoId).join(',');
+
+            // 3. Statistics al (izlenme, beğeni)
+            const statsResponse = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+              params: {
+                part: 'statistics',
+                id: videoIds,
+                key: YOUTUBE_API_KEY
+              }
+            });
+
+            const statsMap = {};
+            statsResponse.data.items.forEach(item => {
+              statsMap[item.id] = item.statistics;
+            });
+
+            // 4. Formatlı liste oluştur
             let videoList = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
+
             videos.forEach((video, index) => {
               const title = video.snippet.title;
               const channelTitle = video.snippet.channelTitle;
               const videoId = video.id.videoId;
               const thumbnail = video.snippet.thumbnails.medium.url;
               const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+              // İstatistikler
+              const stats = statsMap[videoId];
+              const viewCount = stats ? formatNumber(stats.viewCount) : 'N/A';
+              const likeCount = stats ? formatNumber(stats.likeCount) : 'N/A';
+
               videoList += `**${index + 1}. ${title}**\n`;
-              videoList += `📺 Kanal: ${channelTitle}\n`;
+              videoList += `📺 ${channelTitle} • 👁️ ${viewCount} • 👍 ${likeCount}\n`;
               videoList += `[🔗 İzle](${videoUrl})\n`;
               videoList += `![${title}](${thumbnail})\n\n`;
             });
+
             aiResponse = videoList;
           }
+
           console.log('✅ YouTube sonuçları döndürüldü');
         } catch (youtubeError) {
           console.error('❌ YouTube API hatası:', youtubeError.message);
@@ -279,6 +310,14 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           }
         }
       }
+    }
+
+    // Helper function: Sayı formatlama
+    function formatNumber(num) {
+      const n = parseInt(num);
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+      return n.toString();
     }
     return {
       success: true,
