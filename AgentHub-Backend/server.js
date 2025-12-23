@@ -806,6 +806,29 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ RASTGELE SEÇİM AGENT (agentId === '22') ============
+    if (agentId === '22' && aiResponse.includes('[RANDOM:')) {
+      const match = aiResponse.match(/\[RANDOM:(.*?)\]/);
+      if (match) {
+        const items = match[1].split(',').map(item => item.trim()).filter(item => item.length > 0);
+        console.log(`🎲 Rastgele Seçim: ${items.join(', ')}`);
+        if (items.length < 2) {
+          aiResponse = 'En az 2 seçenek olmalı!';
+        } else {
+          const randomIndex = Math.floor(Math.random() * items.length);
+          const chosen = items[randomIndex];
+
+          aiResponse = `🎲 **Rastgele Seçim:**\n\n`;
+          aiResponse += `🎯 Seçilen: **${chosen}**\n\n`;
+          aiResponse += `📋 Seçenekler:\n`;
+          items.forEach((item, i) => {
+            const emoji = i === randomIndex ? '✅' : '⬜';
+            aiResponse += `${emoji} ${item}\n`;
+          });
+        }
+        console.log('✅ Rastgele seçim yapıldı');
+      }
+    }
     return {
       success: true,
       response: aiResponse

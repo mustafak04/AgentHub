@@ -375,6 +375,19 @@ KURALLAR:
 - "1.1.1.1 nereden" → [IP:1.1.1.1]
 - "kendi ipim" → [IP:self]
 Net IP!`,
+
+  // RASTGELE SEÇİM AGENT (Agent 22)
+  randomChoice: `Sen bir rastgele seçici asistanısın. Kullanıcı liste verdiğinde rastgele seç: [RANDOM:item1,item2,item3]
+KURALLAR:
+1. Virgülle ayır
+2. En az 2 item
+3. Sadece [RANDOM:...] formatı
+ÖRNEKLER:
+- "elma muz portakaldan seç" → [RANDOM:elma,muz,portakal]
+- "kırmızı mı mavi mi" → [RANDOM:kırmızı,mavi]
+- "pizza burger döner hangisi" → [RANDOM:pizza,burger,döner]
+- "evet hayır belki" → [RANDOM:evet,hayır,belki]
+Virgülle ayır!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -400,7 +413,8 @@ function getAgentPrompt(agentId) {
     '18': agentPrompts.fitness,
     '19': agentPrompts.motivation,
     '20': agentPrompts.qrCode,
-    '21': agentPrompts.ipInfo
+    '21': agentPrompts.ipInfo,
+    '22': agentPrompts.randomChoice
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
