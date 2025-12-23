@@ -887,15 +887,23 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           } else {
             const teamId = teams[0].team.id;
             const teamFullName = teams[0].team.name;
-            // Son maçlar
+            // Son 30 günün maçları
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
             const fixturesResponse = await axios.get('https://v3.football.api-sports.io/fixtures', {
               params: {
                 team: teamId,
-                last: 3
+                from: thirtyDaysAgo.toISOString().split('T')[0],
+                to: today.toISOString().split('T')[0]
               },
               headers: { 'x-apisports-key': FOOTBALL_API_KEY }
             });
-            const fixtures = fixturesResponse.data.response;
+
+            const allFixtures = fixturesResponse.data.response;
+            // Son 3 maçı al (bitmiş olanlar)
+            const fixtures = allFixtures.filter(f => f.fixture.status.short === 'FT').slice(-3).reverse();
             // DEBUG: API yanıtını kontrol et
             console.log('📡 Fixtures Response:', JSON.stringify(fixturesResponse.data).substring(0, 500));
             console.log('📊 Fixtures count:', fixtures.length);
