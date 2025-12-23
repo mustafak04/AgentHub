@@ -896,6 +896,9 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               headers: { 'x-apisports-key': FOOTBALL_API_KEY }
             });
             const fixtures = fixturesResponse.data.response;
+            // DEBUG: API yanıtını kontrol et
+            console.log('📡 Fixtures Response:', JSON.stringify(fixturesResponse.data).substring(0, 500));
+            console.log('📊 Fixtures count:', fixtures.length);
             aiResponse = `⚽ **${teamFullName} - Son Maçlar:**\n\n`;
             fixtures.forEach((fixture, i) => {
               const homeTeam = fixture.teams.home.name;
