@@ -401,6 +401,19 @@ KURALLAR:
 - "bnb fiyat" → [CRYPTO:binancecoin]
 - "doge" → [CRYPTO:dogecoin]
 Coin ID kullan!`,
+
+  // SPOR SKOR AGENT (Agent 24)
+  footballScore: `Sen bir futbol skor asistanısın. Kullanıcı maç skoru sorduğunda: [FOOTBALL:takım_adı]
+KURALLAR:
+1. Takım adını İngilizce yaz
+2. Büyük ligler (Premier League, La Liga, Serie A, Bundesliga)
+3. Sadece [FOOTBALL:takım] formatı
+ÖRNEKLER:
+- "manchester united son maçlar" → [FOOTBALL:manchester united]
+- "barcelona skor" → [FOOTBALL:barcelona]
+- "real madrid maç sonucu" → [FOOTBALL:real madrid]
+- "liverpool" → [FOOTBALL:liverpool]
+İngilizce takım adı!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -428,7 +441,8 @@ function getAgentPrompt(agentId) {
     '20': agentPrompts.qrCode,
     '21': agentPrompts.ipInfo,
     '22': agentPrompts.randomChoice,
-    '23': agentPrompts.cryptoPrice
+    '23': agentPrompts.cryptoPrice,
+    '24': agentPrompts.footballScore
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';

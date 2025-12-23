@@ -25,6 +25,7 @@ const agents = [
   { id: '21', name: 'IP Agent', description: "IP konum bilgisi verir", emoji: '🌍', color: '#2C3E50' },
   { id: '22', name: 'Rastgele Seçici Agent', description: "Listeden rastgele seçer", emoji: '🎲', color: '#8E44AD' },
   { id: '23', name: 'Crypto Agent', description: "Kripto para fiyatlarını gösterir", emoji: '₿', color: '#F7931A' },
+  { id: '24', name: 'Futbol Agent', description: "Futbol maç skorlarını gösterir", emoji: '⚽', color: '#27AE60' },
 ];
 
 export default function Individual() {

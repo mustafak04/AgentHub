@@ -867,6 +867,53 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         }
       }
     }
+    // ============ SPOR SKOR AGENT (agentId === '24') ============
+    if (agentId === '24' && aiResponse.includes('[FOOTBALL:')) {
+      const match = aiResponse.match(/\[FOOTBALL:(.*?)\]/);
+      if (match) {
+        const teamName = match[1].trim();
+        console.log(`⚽ Futbol: ${teamName}`);
+        try {
+          const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY;
+          if (!FOOTBALL_API_KEY) throw new Error('FOOTBALL_API_KEY tanımlı değil');
+          // Takım ara
+          const searchResponse = await axios.get('https://v3.football.api-sports.io/teams', {
+            params: { search: teamName },
+            headers: { 'x-apisports-key': FOOTBALL_API_KEY }
+          });
+          const teams = searchResponse.data.response;
+          if (!teams.length) {
+            aiResponse = `"${teamName}" takımı bulunamadı.`;
+          } else {
+            const teamId = teams[0].team.id;
+            const teamFullName = teams[0].team.name;
+            // Son maçlar
+            const fixturesResponse = await axios.get('https://v3.football.api-sports.io/fixtures', {
+              params: {
+                team: teamId,
+                last: 3
+              },
+              headers: { 'x-apisports-key': FOOTBALL_API_KEY }
+            });
+            const fixtures = fixturesResponse.data.response;
+            aiResponse = `⚽ **${teamFullName} - Son Maçlar:**\n\n`;
+            fixtures.forEach((fixture, i) => {
+              const homeTeam = fixture.teams.home.name;
+              const awayTeam = fixture.teams.away.name;
+              const homeScore = fixture.goals.home;
+              const awayScore = fixture.goals.away;
+              const status = fixture.fixture.status.short;
+              aiResponse += `**${i + 1}. ${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}**\n`;
+              aiResponse += `📅 ${fixture.fixture.date.split('T')[0]} | ${status}\n\n`;
+            });
+          }
+          console.log('✅ Futbol skorları alındı');
+        } catch (footballError) {
+          console.error('❌ API-Football hatası:', footballError.message);
+          aiResponse = 'Üzgünüm, futbol skorları alınamadı.';
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
