@@ -210,6 +210,48 @@ ${fromCurrency} → ${toCurrency}
       // Gemini zaten kod asistanı olarak çalışacak
       console.log('✅ Kod asistanı yanıtı oluşturuldu.');
     }
+    // ============ AI GÖRSEL OLUŞTURMA AGENT (agentId === '8') ============
+    if (agentId === '8' && aiResponse.includes('[IMAGE:')) {
+      const match = aiResponse.match(/\[IMAGE:(.*?)\]/);
+      if (match) {
+        const prompt = match[1].trim();
+        console.log(`🎨 Görsel oluşturuluyor: ${prompt.substring(0, 50)}...`);
+        try {
+          const HF_API_KEY = process.env.HUGGINGFACE_API_KEY;
+          if (!HF_API_KEY) throw new Error('HUGGINGFACE_API_KEY tanımlı değil');
+          const response = await axios.post(
+            'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1',
+            { inputs: prompt },
+            {
+              headers: {
+                'Authorization': `Bearer ${HF_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              responseType: 'arraybuffer',
+              timeout: 30000 // 30 saniye timeout
+            }
+          );
+          // Image'i base64'e çevir
+          const base64Image = Buffer.from(response.data, 'binary').toString('base64');
+          const imageDataUrl = `data:image/jpeg;base64,${base64Image}`;
+          aiResponse = `🎨 **Görsel Oluşturuldu!**
+**Prompt:** ${prompt}
+![Generated Image](${imageDataUrl})
+Not: Görsel AI tarafından oluşturulmuştur.`;
+          console.log('✅ Görsel başarıyla oluşturuldu');
+        } catch (imageError) {
+          console.error('❌ Görsel oluşturma hatası:', imageError.message);
+
+          if (imageError.code === 'ECONNABORTED') {
+            aiResponse = 'Üzgünüm, görsel oluşturma çok uzun sürdü. Lütfen tekrar deneyin.';
+          } else if (imageError.response?.status === 503) {
+            aiResponse = 'Model şu anda yükleniyor, lütfen 20 saniye sonra tekrar deneyin.';
+          } else {
+            aiResponse = 'Üzgünüm, görsel oluşturulamadı. Lütfen tekrar deneyin.';
+          }
+        }
+      }
+    }
     return {
       success: true,
       response: aiResponse
