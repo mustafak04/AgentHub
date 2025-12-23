@@ -1,37 +1,71 @@
 import { useRouter } from "expo-router";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const agents = [
-  { id: "1", name: "Hava Durumu Agent", description: "Hava durumu bilgisi sağlar", emoji: "🌤️", color: "#FF9500" },
-  { id: "2", name: "Hesap Makinesi Agent", description: "Matematiksel hesaplamalar yapar", emoji: "🔢", color: "#5856D6" },
-  { id: "3", name: "Çeviri Agent", description: "Diller arası çeviri yapar", emoji: "🌍", color: "#32ADE6" },
-  { id: "4", name: "Haber Agent", description: "Güncel haberleri getirir", emoji: "📰", color: "#FF2D55" },
-  { id: '5', name: 'Wikipedia Agent', description: "Wikipedia özeti sağlar", emoji: '📚', color: '#9013FE' },
-  { id: '6', name: 'Döviz Agent', description: "Döviz kurlarını gösterir", emoji: '💰', color: '#FF9500' },
-  { id: '7', name: 'Kod Asistan Agent', description: "Kod yazar, debug yapar, açıklar", emoji: '💻', color: '#34C759' },
-  { id: '8', name: 'Görsel Agent', description: "Metinden görsel oluşturur", emoji: '🎨', color: '#FF6B6B' },
-  { id: '9', name: 'YouTube Agent', description: "Video arar, önerir", emoji: '🎬', color: '#FF0000' },
-  { id: '10', name: 'Kitap Öneri Agent', description: "Kitap ara, oku", emoji: '📚', color: '#8E44AD' },
-  { id: '11', name: 'Özet Agent', description: "Makale/URL özetler", emoji: '📝', color: '#3498DB' },
-  { id: '12', name: 'Sözlük Agent', description: "Kelime anlamı bulur, açıklar", emoji: '📖', color: '#E74C3C' },
-  { id: '13', name: 'Film/Dizi Agent', description: "Film ve dizi arar, önerir", emoji: '🎬', color: '#F39C12' },
-  { id: '14', name: 'Müzik Agent', description: "Sanatçı ve şarkı arar", emoji: '🎵', color: '#9B59B6' },
-  { id: '15', name: 'Podcast Agent', description: "Podcast arar, önerir", emoji: '🎙️', color: '#E67E22' },
-  { id: '16', name: 'Oyun Agent', description: "Oyun arar, bilgi verir", emoji: '🎮', color: '#16A085' },
-  { id: '17', name: 'Yemek Agent', description: "Tarif arar, önerir", emoji: '🍳', color: '#E74C3C' },
-  { id: '18', name: 'Fitness Agent', description: "Antrenman planı, egzersiz önerir", emoji: '💪', color: '#27AE60' },
-  { id: '19', name: 'Motivasyon Agent', description: "İlham verir, cesaretlendirir", emoji: '🌟', color: '#F39C12' },
-  { id: '20', name: 'QR Kod Agent', description: "QR kod oluşturur", emoji: '📱', color: '#34495E' },
-  { id: '21', name: 'IP Agent', description: "IP konum bilgisi verir", emoji: '🌍', color: '#2C3E50' },
-  { id: '22', name: 'Rastgele Seçici Agent', description: "Listeden rastgele seçer", emoji: '🎲', color: '#8E44AD' },
-  { id: '23', name: 'Crypto Agent', description: "Kripto para fiyatlarını gösterir", emoji: '₿', color: '#F7931A' },
-  { id: '24', name: 'Futbol Agent', description: "Futbol maç skorlarını gösterir", emoji: '⚽', color: '#27AE60' },
+  { id: "1", name: "Hava Durumu Agent", description: "Hava durumu bilgisi sağlar", emoji: "🌤️", color: "#FF9500", category: "basic" },
+  { id: "2", name: "Hesap Makinesi Agent", description: "Matematiksel hesaplamalar yapar", emoji: "🔢", color: "#5856D6", category: "basic" },
+  { id: "3", name: "Çeviri Agent", description: "Diller arası çeviri yapar", emoji: "🌍", color: "#32ADE6", category: "basic" },
+  { id: "4", name: "Haber Agent", description: "Güncel haberleri getirir", emoji: "📰", color: "#FF2D55", category: "basic" },
+  { id: '5', name: 'Wikipedia Agent', description: "Wikipedia özeti sağlar", emoji: '📚', color: '#9013FE', category: "basic" },
+  { id: '6', name: 'Döviz Agent', description: "Döviz kurlarını gösterir", emoji: '💰', color: '#FF9500', category: "basic" },
+  { id: '7', name: 'Kod Asistan Agent', description: "Kod yazar, debug yapar, açıklar", emoji: '💻', color: '#34C759', category: "ai" },
+  { id: '8', name: 'Görsel Agent', description: "Metinden görsel oluşturur", emoji: '🎨', color: '#FF6B6B', category: "ai" },
+  { id: '9', name: 'YouTube Agent', description: "Video arar, önerir", emoji: '🎬', color: '#FF0000', category: "info" },
+  { id: '10', name: 'Kitap Öneri Agent', description: "Kitap ara, oku", emoji: '📚', color: '#8E44AD', category: "info" },
+  { id: '11', name: 'Özet Agent', description: "Makale/URL özetler", emoji: '📝', color: '#3498DB', category: "info" },
+  { id: '12', name: 'Sözlük Agent', description: "Kelime anlamı bulur, açıklar", emoji: '📖', color: '#E74C3C', category: "info" },
+  { id: '13', name: 'Film/Dizi Agent', description: "Film ve dizi arar, önerir", emoji: '🎬', color: '#F39C12', category: "entertainment" },
+  { id: '14', name: 'Müzik Agent', description: "Sanatçı ve şarkı arar", emoji: '🎵', color: '#9B59B6', category: "entertainment" },
+  { id: '15', name: 'Podcast Agent', description: "Podcast arar, önerir", emoji: '🎙️', color: '#E67E22', category: "entertainment" },
+  { id: '16', name: 'Oyun Agent', description: "Oyun arar, bilgi verir", emoji: '🎮', color: '#16A085', category: "entertainment" },
+  { id: '17', name: 'Yemek Agent', description: "Tarif arar, önerir", emoji: '🍳', color: '#E74C3C', category: "health" },
+  { id: '18', name: 'Fitness Agent', description: "Antrenman planı, egzersiz önerir", emoji: '💪', color: '#27AE60', category: "health" },
+  { id: '19', name: 'Motivasyon Agent', description: "İlham verir, cesaretlendirir", emoji: '🌟', color: '#F39C12', category: "health" },
+  { id: '20', name: 'QR Kod Agent', description: "QR kod oluşturur", emoji: '📱', color: '#34495E', category: "tools" },
+  { id: '21', name: 'IP Agent', description: "IP konum bilgisi verir", emoji: '🌍', color: '#2C3E50', category: "tools" },
+  { id: '22', name: 'Rastgele Seçici Agent', description: "Listeden rastgele seçer", emoji: '🎲', color: '#8E44AD', category: "tools" },
+  { id: '23', name: 'Crypto Agent', description: "Kripto para fiyatlarını gösterir", emoji: '₿', color: '#F7931A', category: "tools" },
+  { id: '24', name: 'Futbol Agent', description: "Futbol maç skorlarını gösterir", emoji: '⚽', color: '#27AE60', category: "tools" },
+];
+
+const categories = [
+  { id: 'basic', name: 'Temel', emoji: '🔧', color: '#3498DB' },
+  { id: 'ai', name: 'AI & Kod', emoji: '🤖', color: '#9B59B6' },
+  { id: 'info', name: 'Bilgi', emoji: '📚', color: '#E67E22' },
+  { id: 'entertainment', name: 'Eğlence', emoji: '🎬', color: '#E74C3C' },
+  { id: 'health', name: 'Sağlık', emoji: '💪', color: '#27AE60' },
+  { id: 'tools', name: 'Araçlar', emoji: '🛠️', color: '#34495E' },
 ];
 
 export default function Individual() {
   const router = useRouter();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Her bir agent için kart tasarımı
+  // Kategori toggle
+  const toggleCategory = (categoryId: string) => {
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== categoryId));
+    } else {
+      setSelectedCategories([...selectedCategories, categoryId]);
+    }
+  };
+
+  // Filtreleme
+  const filteredAgents = agents.filter(agent => {
+    // Kategori filtresi (boşsa tümü)
+    const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(agent.category);
+
+    // Arama filtresi
+    const searchMatch = searchQuery === '' ||
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return categoryMatch && searchMatch;
+  });
+
+  // Agent kartı
   const renderAgentCard = ({ item }: { item: typeof agents[0] }) => (
     <TouchableOpacity
       style={[styles.card, { borderLeftColor: item.color, borderLeftWidth: 4 }]}
@@ -50,12 +84,66 @@ export default function Individual() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>👤 Agent Listesi</Text>
-      <Text style={styles.subtitle}>Çalışmak istediğin agenti seç</Text>
+      <Text style={styles.subtitle}>
+        {filteredAgents.length} agent {searchQuery || selectedCategories.length > 0 ? 'bulundu' : 'mevcut'}
+      </Text>
+
+      {/* Arama Çubuğu */}
+      <View style={styles.searchContainer}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Agent ara..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#999"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Text style={styles.clearButton}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Kategori Butonları */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScrollView}
+        contentContainerStyle={styles.categoryContainer}
+      >
+        {categories.map(category => {
+          const isSelected = selectedCategories.includes(category.id);
+          return (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.categoryButton,
+                { backgroundColor: isSelected ? category.color : '#f0f0f0' }
+              ]}
+              onPress={() => toggleCategory(category.id)}
+            >
+              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              <Text style={[styles.categoryText, { color: isSelected ? '#fff' : '#333' }]}>
+                {category.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Agent Listesi */}
       <FlatList
-        data={agents}
+        data={filteredAgents}
         renderItem={renderAgentCard}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>🔍 Sonuç bulunamadı</Text>
+            <Text style={styles.emptySubtext}>Farklı bir arama deneyin</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -71,17 +159,75 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 4,
     color: "#1a1a1a",
   },
   subtitle: {
     fontSize: 14,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 16,
     color: "#666",
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    color: '#333',
+  },
+  clearButton: {
+    fontSize: 18,
+    color: '#999',
+    padding: 4,
+  },
+  categoryScrollView: {
+    marginBottom: 12,
+    height: 52,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  categoryContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    minWidth: 110,
+    justifyContent: 'center',
+  },
+  categoryEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   listContainer: {
     paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   card: {
     backgroundColor: "#fff",
@@ -112,5 +258,19 @@ const styles = StyleSheet.create({
   agentDescription: {
     fontSize: 14,
     color: "#666",
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 60,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#999',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#bbb',
   },
 });
