@@ -8,11 +8,11 @@ const agents = [
   { id: "4", name: "Haber Agent", description: "Güncel haberleri getirir", emoji: "📰", color: "#FF2D55" },
   { id: '5', name: 'Wikipedia Agent', description: "Wikipedia özeti sağlar", emoji: '📚', color: '#9013FE' },
   { id: '6', name: 'Döviz Agent', description: "Döviz kurlarını gösterir", emoji: '💰', color: '#FF9500' },
-  { id: '7', name: 'Kod Asistanı', description: "Kod yaz, debug yap, açıkla", emoji: '💻', color: '#34C759' },
-  { id: '8', name: 'AI Görsel', description: "Metinden görsel oluştur", emoji: '🎨', color: '#FF6B6B' },
-  { id: '9', name: 'YouTube Arama', description: "Video ara, izle", emoji: '🎬', color: '#FF0000' },
-  { id: '10', name: 'Kitap Öneri', description: "Kitap ara, oku", emoji: '📚', color: '#8E44AD' },
-  { id: '11', name: 'Özet Çıkar', description: "Makale/URL özetle", emoji: '📝', color: '#3498DB' },
+  { id: '7', name: 'Kod Asistan Agent', description: "Kod yaz, debug yap, açıkla", emoji: '💻', color: '#34C759' },
+  { id: '8', name: 'Görsel Agent', description: "Metinden görsel oluştur", emoji: '🎨', color: '#FF6B6B' },
+  { id: '9', name: 'YouTube Agent', description: "Video ara, izle", emoji: '🎬', color: '#FF0000' },
+  { id: '10', name: 'Kitap Öneri Agent', description: "Kitap ara, oku", emoji: '📚', color: '#8E44AD' },
+  { id: '11', name: 'Özet Agent', description: "Makale/URL özetle", emoji: '📝', color: '#3498DB' },
 ];
 
 export default function Individual() {

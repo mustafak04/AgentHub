@@ -381,58 +381,66 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
       }
     }
     // ============ ÖZET ÇIKARMA AGENT (agentId === '11') ============
-    if (agentId === '11' && aiResponse.includes('[SUMMARIZE_URL:')) {
-      const match = aiResponse.match(/\[SUMMARIZE_URL:(.*?)\]/);
-      if (match) {
-        const url = match[1].trim();
-        console.log(`📝 URL özetleniyor: ${url}`);
-        try {
-          // 1. URL'den HTML çek
-          const response = await axios.get(url, {
-            timeout: 10000,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    if (agentId === '11') {
+      // URL özetleme
+      if (aiResponse.includes('[SUMMARIZE_URL:')) {
+        const match = aiResponse.match(/\[SUMMARIZE_URL:(.*?)\]/);
+        if (match) {
+          const url = match[1].trim();
+          console.log(`📝 URL özetleniyor: ${url}`);
+          try {
+            const response = await axios.get(url, {
+              timeout: 10000,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              }
+            });
+
+            const $ = cheerio.load(response.data);
+            $('script, style, nav, header, footer, aside').remove();
+
+            let textContent = '';
+            $('article, main, .content, .post, p').each((i, elem) => {
+              textContent += $(elem).text() + ' ';
+            });
+
+            textContent = textContent.replace(/\s+/g, ' ').trim();
+
+            if (!textContent || textContent.length < 100) {
+              aiResponse = 'Üzgünüm, bu URL\'den yeterli metin çıkaramadım.';
+            } else {
+              const limitedText = textContent.substring(0, 3000);
+              const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:\n\n${limitedText}`;
+
+              const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+              const summaryResult = await summaryModel.generateContent(summaryPrompt);
+              const summary = summaryResult.response.text();
+
+              aiResponse = `📝 **Özet:**\n\n${summary}\n\n🔗 Kaynak: ${url}`;
             }
-          });
-          // 2. HTML'i parse et
-          const $ = cheerio.load(response.data);
-          // Script, style, nav gibi gereksizleri kaldır
-          $('script, style, nav, header, footer, aside').remove();
-          // Ana metni al (p, article, main vb.)
-          let textContent = '';
-          $('article, main, .content, .post, p').each((i, elem) => {
-            textContent += $(elem).text() + ' ';
-          });
-          // Boşlukları temizle
-          textContent = textContent.replace(/\s+/g, ' ').trim();
-          if (!textContent || textContent.length < 100) {
-            aiResponse = 'Üzgünüm, bu URL\'den yeterli metin çıkaramadım.';
-          } else {
-            // 3. Gemini ile özetle (max 3000 karakter)
-            const limitedText = textContent.substring(0, 3000);
 
-            const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:
-${limitedText}`;
-            const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-            const summaryResult = await summaryModel.generateContent(summaryPrompt);
-            const summary = summaryResult.response.text();
-            aiResponse = `📝 **Özet:**
-${summary}
-🔗 Kaynak: ${url}`;
-          }
-          console.log('✅ URL özeti oluşturuldu');
-        } catch (scrapeError) {
-          console.error('❌ Web scraping hatası:', scrapeError.message);
-
-          if (scrapeError.code === 'ENOTFOUND') {
-            aiResponse = 'URL bulunamadı. Lütfen geçerli bir URL girin.';
-          } else if (scrapeError.code === 'ETIMEDOUT') {
-            aiResponse = 'URL\'ye ulaşılamadı (timeout).';
-          } else {
-            aiResponse = 'Üzgünüm, bu sayfayı özetleyemedim.';
+            console.log('✅ URL özeti oluşturuldu');
+          } catch (scrapeError) {
+            console.error('❌ Web scraping hatası:', scrapeError.message);
+            aiResponse = scrapeError.code === 'ENOTFOUND'
+              ? 'URL bulunamadı. Lütfen geçerli bir URL girin.'
+              : 'Üzgünüm, bu sayfayı özetleyemedim.';
           }
         }
       }
+      // Metin özetleme (URL değilse)
+      else if (userMessage.length > 500) {
+        // Uzun metinleri otomatik özetle
+        console.log('📝 Uzun metin özetleniyor...');
+        const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:\n\n${userMessage}`;
+
+        const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const summaryResult = await summaryModel.generateContent(summaryPrompt);
+        aiResponse = `📝 **Özet:**\n\n${summaryResult.response.text()}`;
+
+        console.log('✅ Metin özeti oluşturuldu');
+      }
+      // Kısa metinler için Gemini'nin normal cevabını kullan
     }
     return {
       success: true,
