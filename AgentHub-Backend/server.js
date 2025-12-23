@@ -742,10 +742,14 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               const readyInMinutes = recipe.readyInMinutes || 'N/A';
               const servings = recipe.servings || 'N/A';
               const image = recipe.image || '';
-              const summary = recipe.summary?.replace(/<[^>]*>/g, '').substring(0, 150) || 'Açıklama yok';
+              let summary = recipe.summary?.replace(/<[^>]*>/g, '') || 'Açıklama yok';
+              const maxLength = 300;
+              if (summary.length > maxLength) {
+                summary = summary.substring(0, maxLength) + '...';
+              }
               recipeList += `**${index + 1}. ${title}**\n`;
               recipeList += `⏱️ ${readyInMinutes} dk • 👥 ${servings} kişilik\n`;
-              recipeList += `📝 ${summary}...\n`;
+              recipeList += `📝 ${summary}\n`;
               if (image) {
                 recipeList += `![${title}](${image})\n`;
               }
