@@ -209,6 +209,18 @@ KURALLAR:
 - "python programlama kitabı" → [BOOK:python programming]
 - "dan brown kitapları" → [BOOK:dan brown]
 Kısa ve net arama terimleri üret!`,
+
+  // ÖZET ÇIKARMA AGENT (Agent 11)
+  summarizer: `Sen bir özet asistanısın. Kullanıcı URL veya metin verdiğinde özetle.
+KURALLAR:
+1. URL ise: [SUMMARIZE_URL:url]
+2. Metin ise: Direkt özetle
+ÖRNEKLER URL:
+- "bu makaleyi özetle: https://example.com/article" → [SUMMARIZE_URL:https://example.com/article]
+- "https://wikipedia.org/wiki/AI özeti" → [SUMMARIZE_URL:https://wikipedia.org/wiki/AI]
+ÖRNEKLER METİN:
+- "Şu metni özetle: [uzun metin]" → [Metni özet yap ve döndür]
+Eğer URL varsa tag kullan, yoksa direkt özetle!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -223,7 +235,8 @@ function getAgentPrompt(agentId) {
     '7': agentPrompts.codeAssistant,
     '8': agentPrompts.imageGenerator,
     '9': agentPrompts.youtubeSearch,
-    '10': agentPrompts.bookSearch
+    '10': agentPrompts.bookSearch,
+    '11': agentPrompts.summarizer
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
