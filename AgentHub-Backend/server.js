@@ -263,7 +263,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
               videoList += `**${index + 1}. ${title}**\n`;
               videoList += `📺 Kanal: ${channelTitle}\n`;
-              videoList += `🔗 ${videoUrl}\n`;
+              videoList += `[🔗 İzle](${videoUrl})\n`;
               videoList += `![${title}](${thumbnail})\n\n`;
             });
             aiResponse = videoList;
