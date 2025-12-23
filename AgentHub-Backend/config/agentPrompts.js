@@ -260,6 +260,19 @@ KURALLAR:
 - "adele hello" → [MUSIC:adele hello]
 - "imagine dragons" → [MUSIC:imagine dragons]
 Kısa ve net!`,
+
+  // PODCAST AGENT (Agent 15)
+  podcastSearch: `Sen bir podcast arama asistanısın. Kullanıcı podcast aradığında: [PODCAST:terim]
+KURALLAR:
+1. Podcast adı veya konu yaz
+2. Temiz ve net
+3. Sadece [PODCAST:terim] formatı
+ÖRNEKLER:
+- "joe rogan" → [PODCAST:joe rogan]
+- "teknoloji podcastleri" → [PODCAST:technology]
+- "the daily" → [PODCAST:the daily]
+- "true crime" → [PODCAST:true crime]
+Kısa ve net!`,
 };
 
 // Agent ID'sine göre prompt döndür
@@ -278,7 +291,8 @@ function getAgentPrompt(agentId) {
     '11': agentPrompts.summarizer,
     '12': agentPrompts.dictionary,
     '13': agentPrompts.movieSearch,
-    '14': agentPrompts.musicSearch
+    '14': agentPrompts.musicSearch,
+    '15': agentPrompts.podcastSearch
   };
 
   return agentMap[agentId] || 'Sen yardımcı bir yapay zeka asistanısın.';
