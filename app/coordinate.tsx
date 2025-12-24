@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
 
@@ -10,10 +11,32 @@ const CHAT_ID = "coordinate"; // Coordina mode için sabit chat ID
 
 export default function Coordinate() {
   const { colors, isDark } = useTheme();
-  const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
+  const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent"; fullText?: string }[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true); // Geçmiş yükleniyor durumu
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+
+  // Markdown stilleri - colors ve isDark'a erişmek için component içinde
+  const markdownStyles = {
+    body: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    strong: {
+      fontWeight: 'bold' as const,
+    },
+    em: {
+      fontStyle: 'italic' as const,
+    },
+    code_inline: {
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+      fontFamily: 'monospace',
+    },
+  };
 
   // Uygulama açıldığında sohbet geçmişini yükle ve gerçek zamanlı listener kur
   useEffect(() => {
@@ -110,13 +133,28 @@ export default function Coordinate() {
     if (item.sender === "user") {
       return (
         <View style={[styles.messageBubble, styles.userBubble]}>
-          <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
+          <Markdown style={markdownStyles}>{item.text}</Markdown>
         </View>
       );
     } else {
-      // AI message - CSS glassmorphism
+      const isExpanded = expandedMessages.has(item.id);
+
+      const toggleExpand = () => {
+        setExpandedMessages(prev => {
+          const newSet = new Set(prev);
+          if (newSet.has(item.id)) {
+            newSet.delete(item.id);
+          } else {
+            newSet.add(item.id);
+          }
+          return newSet;
+        });
+      };
+
       return (
-        <View
+        <TouchableOpacity
+          onPress={toggleExpand}
+          activeOpacity={0.7}
           style={[
             styles.messageBubble,
             styles.agentBubble,
@@ -127,8 +165,13 @@ export default function Coordinate() {
             }
           ]}
         >
-          <Text style={[styles.messageText, { color: colors.text }]}>{item.text}</Text>
-        </View>
+          <Markdown style={markdownStyles}>{isExpanded && item.fullText ? item.fullText : item.text}</Markdown>
+          {item.fullText && item.fullText !== item.text && (
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 8 }}>
+              {isExpanded ? '👆 Özet için dokun' : '👇 Detaylar için dokun'}
+            </Text>
+          )}
+        </TouchableOpacity>
       );
     }
   };
