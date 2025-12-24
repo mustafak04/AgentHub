@@ -1042,12 +1042,41 @@ app.post('/api/coordinate', async (req, res) => {
 
     const plannerPrompt = `Sen bir görev planlayıcısısın. Kullanıcının isteğini analiz et ve hangi agentların SIRAYLA çalışması gerektiğini belirle.
 
-Mevcut agentlar:
-- weather: Hava durumu bilgisi sağlar
-- calculator: Matematiksel hesaplama yapar
-- translator: Çeviri yapar (kaynak dil → hedef dil)
-- news: Haber getirir (konu, dil, ülke)
-- wikipedia: Wikipedia özeti getirir
+Mevcut agentlar (24 adet):
+
+**Bilgi & Araştırma:**
+- weather: Hava durumu bilgisi sağlar (şehir → hava durumu)
+- news: Güncel haber getirir (konu, dil, ülke → haberler)
+- wikipedia: Wikipedia özeti getirir (konu → özet)
+- dictionary: Kelime anlamı (İngilizce kelime → anlam)
+- cryptoPrice: Kripto para fiyatları (bitcoin, ethereum → USD fiyat)
+- footballScore: Futbol takımı sonuçları (takım adı → son maçlar)
+
+**Hesaplama & Çeviri:**
+- calculator: Matematiksel hesaplama (işlem → sonuç)
+- translator: Diller arası çeviri (metin + hedef dil → çeviri)
+- exchange: Döviz kuru (USD/EUR/TRY → kur)
+- ipInfo: IP adresi bilgisi (IP → konum/bilgi)
+
+**Medya & Eğlence:**
+- youtubeSearch: YouTube video arama (konu → videolar)
+- bookSearch: Kitap arama (başlık/yazar → kitaplar)
+- movieSearch: Film/dizi arama (başlık → film bilgisi)
+- musicSearch: Müzik/sanatçı arama (şarkı/sanatçı → bilgi)
+- podcastSearch: Podcast arama (konu → podcast'ler)
+- gameSearch: Oyun bilgisi (oyun adı → bilgi)
+- recipeSearch: Yemek tarifi (yemek adı → tarif)
+
+**Yaratıcı & Üretken:**
+- codeAssistant: Kod yazma/açıklama/debug (kod talebi → kod)
+- imageGenerator: AI görsel oluşturma (açıklama → görsel)
+- qrCode: QR kod oluşturma (metin/URL → QR kod)
+- summarizer: URL/metin özetleme (URL/metin → özet)
+
+**Yaşam & Sağlık:**
+- fitness: Antrenman planı/egzersiz önerileri (hedef → program)
+- motivation: Motivasyon ve ilham (konu → motivasyon)
+- randomChoice: Rastgele seçim (liste → seçim)
 
 Kullanıcı mesajı: "${userMessage}"
 
@@ -1055,29 +1084,29 @@ Yanıtı JSON formatında ver:
 {
   "steps": [
     {
-      "agent": "news",
-      "task": "Fenerbahçe hakkında Türkçe haberler getir",
-      "input": "Fenerbahçe haberleri"
+      "agent": "cryptoPrice",
+      "task": "Bitcoin fiyatını öğren",
+      "input": "bitcoin"
     },
     {
-      "agent": "translator",
-      "task": "Önceki adımın çıktısını İngilizce'ye çevir",
+      "agent": "calculator",
+      "task": "100 dolar ile kaç bitcoin alınabilir hesapla (önceki adımın fiyatını kullan)",
       "input": "{{PREVIOUS_OUTPUT}}"
     }
   ],
-  "explanation": "Önce Türkçe haberler alınacak, sonra İngilizce'ye çevrilecek"
-}`;
+  "explanation": "Önce bitcoin fiyatı alınacak, sonra hesaplama yapılacak"
+}
 
-    // ✅ JSON mode ile model oluştur
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        responseMimeType: 'application/json'
-      }
-    });
+ÖNEMLİ KURALLAR:
+1. Her agent için doğru input formatı ver
+2. Önceki adımın çıktısını kullanmak için "{{PREVIOUS_OUTPUT}}" kullan
+3. En verimli agent sırasını belirle
+4. Gereksiz adım ekleme
+5. JSON formatı bozuk olmamalı`;
 
-    const planResult = await model.generateContent(plannerPrompt);
-    const planText = planResult.response.text();
+    // Fallback destekli plan oluştur
+    const systemMessage = 'Sen bir görev planlayıcısısın. Sadece JSON formatında yanıt ver.';
+    const planText = await generateAIResponse(systemMessage, plannerPrompt);
 
     console.log('📄 Plan metni:', planText);
 
@@ -1104,7 +1133,26 @@ Yanıtı JSON formatında ver:
         'calculator': '2',
         'translator': '3',
         'news': '4',
-        'wikipedia': '5'
+        'wikipedia': '5',
+        'exchange': '6',
+        'codeAssistant': '7',
+        'imageGenerator': '8',
+        'youtubeSearch': '9',
+        'bookSearch': '10',
+        'summarizer': '11',
+        'dictionary': '12',
+        'movieSearch': '13',
+        'musicSearch': '14',
+        'podcastSearch': '15',
+        'gameSearch': '16',
+        'recipeSearch': '17',
+        'fitness': '18',
+        'motivation': '19',
+        'qrCode': '20',
+        'ipInfo': '21',
+        'randomChoice': '22',
+        'cryptoPrice': '23',
+        'footballScore': '24'
       }[step.agent];
 
       if (!agentId) {
