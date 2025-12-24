@@ -1163,17 +1163,18 @@ Yanıtı JSON formatında ver:
 
     // 3. Sonuçları birleştir ve kullanıcıya sun
     let finalResponse = `🤝 **Koordinatör Sonucu**\n\n`;
-    finalResponse += `📝 Plan: ${plan.explanation}\n\n`;
-    finalResponse += `---\n\n`;
 
-    // Sadece son adımın çıktısını göster (pipeline sonucu)
+    // Tüm adım sonuçlarını göster
     if (stepResults.length > 0) {
-      const lastStep = stepResults[stepResults.length - 1];
-      if (lastStep.output) {
-        finalResponse += `**Son Sonuç:**\n\n${lastStep.output}`;
-      } else {
-        finalResponse += `❌ İşlem tamamlanamadı: ${lastStep.error}`;
-      }
+      stepResults.forEach((step, index) => {
+        if (step.output) {
+          finalResponse += `**${index + 1}. ${step.agent}**\n${step.output}\n\n---\n\n`;
+        } else if (step.error) {
+          finalResponse += `**${index + 1}. ${step.agent}** ❌\nHata: ${step.error}\n\n---\n\n`;
+        }
+      });
+    } else {
+      finalResponse += `❌ Hiçbir adım tamamlanamadı.`;
     }
 
     res.json({
