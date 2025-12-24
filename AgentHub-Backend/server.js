@@ -14,71 +14,39 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Gemini istemcisi oluştur
+// Gemini istemcisi oluştur (Primary)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Gemini istemcisi oluştur (Backup)
+const genAI_Backup = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_BACKUP);
 
-// ============ DEEPSEEK FALLBACK HELPER ============
-async function callDeepseekAPI(systemMessage, userMessage) {
-  try {
-    console.log('🔄 Deepseek API\'ye geçiliyor...');
-    const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error('DEEPSEEK_API_KEY tanımlı değil!');
-    }
-
-    const response = await axios.post(
-      'https://api.deepseek.com/v1/chat/completions',
-      {
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: userMessage }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const aiResponse = response.data.choices[0].message.content;
-    console.log(`✅ Deepseek cevabı: ${aiResponse.substring(0, 100)}...`);
-    return aiResponse;
-  } catch (error) {
-    console.error('❌ Deepseek API hatası:', error.response?.data || error.message);
-    throw new Error('Deepseek API hatası: ' + (error.response?.data?.error?.message || error.message));
-  }
-}
-
-// ============ AI GENERATION HELPER (GEMINI + DEEPSEEK FALLBACK) ============
+// ============ GEMINI DUAL API HELPER (İki API Key Fallback) ============
 async function generateAIResponse(systemMessage, userMessage) {
   try {
-    // Önce Gemini'yi dene
-    console.log('🤖 Gemini API çağrısı yapılıyor...');
+    console.log('🤖 Gemini API (Primary) çağrısı yapılıyor...');
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
     const result = await model.generateContent(prompt);
     const aiResponse = result.response.text();
-    console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 100)}...`);
+    console.log(`✅ Gemini cevabı (Primary): ${aiResponse.substring(0, 100)}...`);
     return aiResponse;
   } catch (error) {
-    // Rate limit kontrolü
+    // Rate limit veya başka hata durumunda backup key kullan
     if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('Too Many Requests'))) {
-      console.warn('⚠️ Gemini rate limit aşıldı, Deepseek\'e geçiliyor...');
-      return await callDeepseekAPI(systemMessage, userMessage);
+      console.warn('⚠️ Primary API rate limit, Backup API key kullanılıyor...');
+    } else {
+      console.warn('⚠️ Primary API hatası, Backup API key deneniyor...');
     }
 
-    // Diğer hatalar için de Deepseek'i dene
-    console.warn('⚠️ Gemini hatası, Deepseek\'e geçiliyor...');
     try {
-      return await callDeepseekAPI(systemMessage, userMessage);
-    } catch (deepseekError) {
-      throw new Error('Hem Gemini hem Deepseek API başarısız oldu.');
+      const backupModel = genAI_Backup.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const backupPrompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
+      const backupResult = await backupModel.generateContent(backupPrompt);
+      const backupResponse = backupResult.response.text();
+      console.log(`✅ Gemini cevabı (Backup): ${backupResponse.substring(0, 100)}...`);
+      return backupResponse;
+    } catch (backupError) {
+      console.error('❌ Her iki Gemini API de başarısız:', backupError.message);
+      throw new Error('Her iki Gemini API key de başarısız oldu.');
     }
   }
 }
