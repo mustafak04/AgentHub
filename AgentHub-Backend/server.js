@@ -17,17 +17,79 @@ app.use(express.json());
 // Gemini istemcisi oluştur
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// ============ DEEPSEEK FALLBACK HELPER ============
+async function callDeepseekAPI(systemMessage, userMessage) {
+  try {
+    console.log('🔄 Deepseek API\'ye geçiliyor...');
+    const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error('DEEPSEEK_API_KEY tanımlı değil!');
+    }
+
+    const response = await axios.post(
+      'https://api.deepseek.com/v1/chat/completions',
+      {
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: userMessage }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const aiResponse = response.data.choices[0].message.content;
+    console.log(`✅ Deepseek cevabı: ${aiResponse.substring(0, 100)}...`);
+    return aiResponse;
+  } catch (error) {
+    console.error('❌ Deepseek API hatası:', error.response?.data || error.message);
+    throw new Error('Deepseek API hatası: ' + (error.response?.data?.error?.message || error.message));
+  }
+}
+
+// ============ AI GENERATION HELPER (GEMINI + DEEPSEEK FALLBACK) ============
+async function generateAIResponse(systemMessage, userMessage) {
+  try {
+    // Önce Gemini'yi dene
+    console.log('🤖 Gemini API çağrısı yapılıyor...');
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
+    const result = await model.generateContent(prompt);
+    const aiResponse = result.response.text();
+    console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 100)}...`);
+    return aiResponse;
+  } catch (error) {
+    // Rate limit kontrolü
+    if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('Too Many Requests'))) {
+      console.warn('⚠️ Gemini rate limit aşıldı, Deepseek\'e geçiliyor...');
+      return await callDeepseekAPI(systemMessage, userMessage);
+    }
+
+    // Diğer hatalar için de Deepseek'i dene
+    console.warn('⚠️ Gemini hatası, Deepseek\'e geçiliyor...');
+    try {
+      return await callDeepseekAPI(systemMessage, userMessage);
+    } catch (deepseekError) {
+      throw new Error('Hem Gemini hem Deepseek API başarısız oldu.');
+    }
+  }
+}
+
 // AGENT LOGİC FONKSİYONU (Internal Call İçin)
 async function processAgentRequest(agentId, agentName, userMessage) {
   try {
     console.log(`📥 İstek alındı - Agent: ${agentName}, Mesaj: ${userMessage}`);
     const systemMessage = getAgentPrompt(agentId);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-    console.log('🤖 Gemini API çağrısı yapılıyor...');
-    const result = await model.generateContent(prompt);
-    let aiResponse = result.response.text();
-    console.log(`✅ Gemini cevabı: ${aiResponse.substring(0, 100)}...`);
+    // Fallback destekli AI response al
+    let aiResponse = await generateAIResponse(systemMessage, userMessage);
     // ============ HAVA DURUMU AGENT (agentId === '1') ============
     if (agentId === '1' && aiResponse.includes('[WEATHER:')) {
       const cityMatch = aiResponse.match(/\[WEATHER:(.*?)\]/);
