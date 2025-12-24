@@ -1,58 +1,65 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
 
 
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
-const STORAGE_KEY = "chat_history_coordinate";
+const CHAT_ID = "coordinate"; // Coordina mode için sabit chat ID
 
 export default function Coordinate() {
   const { colors, isDark } = useTheme();
   const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true); // Geçmiş yükleniyor durumu
 
-  // Uygulama açıldığında sohbet geçmişini yükle
+  // Uygulama açıldığında sohbet geçmişini yükle ve gerçek zamanlı listener kur
   useEffect(() => {
-    loadChatHistory();
+    let unsubscribe: (() => void) | undefined;
+
+    const initializeChat = async () => {
+      try {
+        // İlk geçmişi yükle
+        const history = await loadChatHistory(CHAT_ID);
+        const formattedMessages = history.map(msg => ({
+          id: msg.id,
+          text: msg.content,
+          sender: msg.role === 'user' ? 'user' as const : 'agent' as const
+        }));
+        setMessages(formattedMessages);
+        setLoadingHistory(false);
+
+        // Gerçek zamanlı listener kur
+        unsubscribe = subscribeToChatUpdates(CHAT_ID, (updatedMessages) => {
+          const formatted = updatedMessages.map(msg => ({
+            id: msg.id,
+            text: msg.content,
+            sender: msg.role === 'user' ? 'user' as const : 'agent' as const
+          }));
+          setMessages(formatted);
+        });
+      } catch (error) {
+        console.error('Coordinate chat başlatma hatası:', error);
+        setLoadingHistory(false);
+      }
+    };
+
+    initializeChat();
+
+    // Cleanup: listener'ı kapat
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
-  // Mesajlar değiştiğinde otomatik kaydet
-  useEffect(() => {
-    if (messages.length > 0) {
-      saveChatHistory();
-    }
-  }, [messages]);
-
-  // Sohbet geçmişini yükle
-  const loadChatHistory = async () => {
-    try {
-      const savedMessages = await AsyncStorage.getItem(STORAGE_KEY);
-      if (savedMessages !== null) {
-        setMessages(JSON.parse(savedMessages));
-        console.log('✅ Koordine sohbet geçmişi yüklendi');
-      }
-    } catch (error) {
-      console.error('Sohbet geçmişi yükleme hatası:', error);
-    }
-  };
-
-  // Sohbet geçmişini kaydet
-  const saveChatHistory = async () => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-      console.log('💾 Koordine sohbet geçmişi kaydedildi');
-    } catch (error) {
-      console.error('Sohbet geçmişi kaydetme hatası:', error);
-    }
-  };
-
   // Sohbet geçmişini temizle
-  const clearChatHistory = async () => {
+  const clearHistory = async () => {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await clearFirestoreChatHistory(CHAT_ID);
       setMessages([]);
       console.log('🗑️ Koordine sohbet geçmişi temizlendi');
     } catch (error) {
@@ -63,34 +70,26 @@ export default function Coordinate() {
   const sendMessage = async () => {
     if (inputText.trim() === "") return;
 
-    const userMessage = { id: Date.now().toString(), text: inputText, sender: "user" as const };
-    setMessages((prev) => [...prev, userMessage]);
-
     const currentInput = inputText;
     setInputText("");
     setLoading(true);
 
     try {
+      // Kullanıcı mesajını Firestore'a kaydet
+      await saveChatMessage(CHAT_ID, 'user', currentInput);
+
       const response = await axios.post(`${BACKEND_URL}/api/coordinate`, {
         userMessage: currentInput,
       });
 
+      // AI cevabını Firestore'a kaydet
       if (response.data.success) {
-        const agentMessage = {
-          id: (Date.now() + 1).toString(),
-          text: response.data.response,
-          sender: "agent" as const,
-        };
-        setMessages((prev) => [...prev, agentMessage]);
+        await saveChatMessage(CHAT_ID, 'ai', response.data.response);
       }
     } catch (error) {
       console.error("Hata:", error);
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "Bir hata oluştu. Lütfen tekrar deneyin.",
-        sender: "agent" as const,
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      // Hata mesajını Firestore'a kaydet
+      await saveChatMessage(CHAT_ID, 'ai', "Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setLoading(false);
     }
@@ -131,17 +130,25 @@ export default function Coordinate() {
     >
       <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.header, { color: colors.text }]}>🤝 Koordine Mod</Text>
-        <TouchableOpacity onPress={clearChatHistory} style={styles.clearButton}>
+        <TouchableOpacity onPress={clearHistory} style={styles.clearButton}>
           <Text style={styles.clearButtonText}>🗑️ Temizle</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messageList}
-      />
+
+      {loadingHistory ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Sohbet geçmişi yükleniyor...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messageList}
+        />
+      )}
 
       {loading && (
         <View style={styles.loadingContainer}>

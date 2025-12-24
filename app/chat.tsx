@@ -1,10 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
+import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
 
 // Backend URL'si
@@ -21,49 +21,55 @@ export default function Chat() {
   const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false); // Yükleniyor durumu
+  const [loadingHistory, setLoadingHistory] = useState(true); // Geçmiş yükleniyor durumu
 
-  // Kullanıcı bazlı sohbet geçmişi anahtarı
-  const STORAGE_KEY = `user_${userId}_chat_history_agent_${agentId}`;
+  const chatId = agentId as string; // Chat ID = agent ID
 
-  // Uygulama açıldığında sohbet geçmişini yükle
+  // Uygulama açıldığında sohbet geçmişini yükle ve gerçek zamanlı listener kur
   useEffect(() => {
-    loadChatHistory();
-  }, []);
+    let unsubscribe: (() => void) | undefined;
 
-  // Mesajlar değiştiğinde otomatik kaydet
-  useEffect(() => {
-    if (messages.length > 0) {
-      saveChatHistory();
-    }
-  }, [messages]);
+    const initializeChat = async () => {
+      try {
+        // İlk geçmişi yükle
+        const history = await loadChatHistory(chatId);
+        const formattedMessages = history.map(msg => ({
+          id: msg.id,
+          text: msg.content,
+          sender: msg.role === 'user' ? 'user' as const : 'agent' as const
+        }));
+        setMessages(formattedMessages);
+        setLoadingHistory(false);
 
-  // Sohbet geçmişini yükle
-  const loadChatHistory = async () => {
-    try {
-      const savedMessages = await AsyncStorage.getItem(STORAGE_KEY);
-      if (savedMessages !== null) {
-        setMessages(JSON.parse(savedMessages));
-        console.log('✅ Sohbet geçmişi yüklendi');
+        // Gerçek zamanlı listener kur
+        unsubscribe = subscribeToChatUpdates(chatId, (updatedMessages) => {
+          const formatted = updatedMessages.map(msg => ({
+            id: msg.id,
+            text: msg.content,
+            sender: msg.role === 'user' ? 'user' as const : 'agent' as const
+          }));
+          setMessages(formatted);
+        });
+      } catch (error) {
+        console.error('Chat başlatma hatası:', error);
+        setLoadingHistory(false);
       }
-    } catch (error) {
-      console.error('Sohbet geçmişi yükleme hatası:', error);
-    }
-  };
+    };
 
-  // Sohbet geçmişini kaydet
-  const saveChatHistory = async () => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-      console.log('💾 Sohbet geçmişi kaydedildi');
-    } catch (error) {
-      console.error('Sohbet geçmişi kaydetme hatası:', error);
-    }
-  };
+    initializeChat();
+
+    // Cleanup: listener'ı kapat
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [chatId]);
 
   // Sohbet geçmişini temizle
-  const clearChatHistory = async () => {
+  const clearHistory = async () => {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await clearFirestoreChatHistory(chatId);
       setMessages([]);
       console.log('🗑️ Sohbet geçmişi temizlendi');
     } catch (error) {
@@ -75,15 +81,14 @@ export default function Chat() {
   const sendMessage = async () => {
     if (inputText.trim() === "") return; // Boş mesaj gönderme
 
-    // Kullanıcı mesajını ekle
-    const userMessage = { id: Date.now().toString(), text: inputText, sender: "user" as const };
-    setMessages((prev) => [...prev, userMessage]);
-
     const currentInput = inputText;
     setInputText(""); // Input'u hemen temizle
     setLoading(true); // Yükleniyor göster
 
     try {
+      // Kullanıcı mesajını Firestore'a kaydet
+      await saveChatMessage(chatId, 'user', currentInput);
+
       // Backend'e istek gönder
       const response = await axios.post(`${BACKEND_URL}/api/agent`, {
         agentId: agentId,
@@ -91,26 +96,16 @@ export default function Chat() {
         userMessage: currentInput,
       });
 
-      // AI cevabını ekle
+      // AI cevabını Firestore'a kaydet
       if (response.data.success) {
-        const agentMessage = {
-          id: (Date.now() + 1).toString(),
-          text: response.data.response,
-          sender: "agent" as const,
-        };
-        setMessages((prev) => [...prev, agentMessage]);
+        await saveChatMessage(chatId, 'ai', response.data.response);
       } else {
         throw new Error("API hatası");
       }
     } catch (error) {
       console.error("Hata:", error);
-      // Hata mesajı göster
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.",
-        sender: "agent" as const,
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      // Hata mesajını Firestore'a kaydet
+      await saveChatMessage(chatId, 'ai', "Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setLoading(false); // Yükleniyor gizle
     }
@@ -163,18 +158,26 @@ export default function Chat() {
     >
       <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.header, { color: colors.text }]}>{agentName || "Koordine Mod"}</Text>
-        <TouchableOpacity onPress={clearChatHistory} style={styles.clearButton}>
+        <TouchableOpacity onPress={clearHistory} style={styles.clearButton}>
           <Text style={styles.clearButtonText}>🗑️ Temizle</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messageList}
-        inverted={false}
-      />
+
+      {loadingHistory ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Sohbet geçmişi yükleniyor...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messageList}
+          inverted={false}
+        />
+      )}
 
       {loading && (
         <View style={styles.loadingContainer}>
