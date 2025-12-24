@@ -121,30 +121,38 @@ export default function Chat() {
         </View>
       );
     } else {
-      // AI message - CSS glassmorphism bubble
+      // AI mesajı - Avatar + Balon
       return (
-        <View
-          style={[
-            styles.messageBubble,
-            styles.agentBubble,
-            {
-              backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderWidth: 1,
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-            }
-          ]}
-        >
-          <Markdown style={{
-            body: { color: colors.text, fontSize: 16 },
-            code_inline: { backgroundColor: colors.input, color: '#d63384', fontFamily: 'monospace' },
-            code_block: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-            fence: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
-            heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-            strong: { fontWeight: 'bold' },
-            em: { fontStyle: 'italic' },
-          }}>
-            {item.text}
-          </Markdown>
+        <View style={styles.aiMessageRow}>
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarIcon}>🤖</Text>
+          </View>
+
+          {/* Message Bubble */}
+          <View
+            style={[
+              styles.messageBubble,
+              styles.agentBubble,
+              {
+                backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+              }
+            ]}
+          >
+            <Markdown style={{
+              body: { color: colors.text, fontSize: 16 },
+              code_inline: { backgroundColor: colors.input, color: '#d63384', fontFamily: 'monospace' },
+              code_block: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+              fence: { backgroundColor: colors.input, padding: 10, borderRadius: 5, fontFamily: 'monospace' },
+              heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+              strong: { fontWeight: 'bold' },
+              em: { fontStyle: 'italic' },
+            }}>
+              {item.text}
+            </Markdown>
+          </View>
         </View>
       );
     }
@@ -201,7 +209,7 @@ export default function Chat() {
           onPress={sendMessage}
           disabled={loading}
         >
-          <Text style={styles.sendButtonText}>Gönder</Text>
+          <Text style={styles.sendButtonIcon}>➤</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -224,5 +232,8 @@ const styles = StyleSheet.create({
   inputContainer: { flexDirection: "row", padding: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#ddd" },
   input: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
   sendButton: { backgroundColor: "#007AFF", borderRadius: 20, paddingHorizontal: 20, justifyContent: "center" },
-  sendButtonText: { color: "#fff", fontWeight: "600" },
+  sendButtonIcon: { color: "#fff", fontSize: 20, fontWeight: "600" },
+  aiMessageRow: { flexDirection: "row", alignItems: "flex-start", marginVertical: 4 },
+  avatarContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#007AFF", alignItems: "center", justifyContent: "center", marginRight: 8 },
+  avatarIcon: { fontSize: 18 },
 });

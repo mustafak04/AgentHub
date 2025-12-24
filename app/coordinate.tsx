@@ -168,27 +168,36 @@ export default function Coordinate() {
         });
       };
 
+      // AI mesajı - Avatar + Balon
       return (
-        <TouchableOpacity
-          onPress={toggleExpand}
-          activeOpacity={0.7}
-          style={[
-            styles.messageBubble,
-            styles.agentBubble,
-            {
-              backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              borderWidth: 1,
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-            }
-          ]}
-        >
-          <Markdown style={markdownStyles}>{isExpanded && item.fullText ? item.fullText : item.text}</Markdown>
-          {item.fullText && item.fullText !== item.text && (
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 8 }}>
-              {isExpanded ? '👆 Özet için dokun' : '👇 Detaylar için dokun'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.aiMessageRow}>
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarIcon}>🤖</Text>
+          </View>
+
+          {/* Message Bubble */}
+          <TouchableOpacity
+            onPress={toggleExpand}
+            activeOpacity={0.7}
+            style={[
+              styles.messageBubble,
+              styles.agentBubble,
+              {
+                backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+              }
+            ]}
+          >
+            <Markdown style={markdownStyles}>{isExpanded && item.fullText ? item.fullText : item.text}</Markdown>
+            {item.fullText && item.fullText !== item.text && (
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 8 }}>
+                {isExpanded ? '👆 Özet için dokun' : '👇 Detaylar için dokun'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       );
     }
   };
@@ -243,7 +252,7 @@ export default function Coordinate() {
           onPress={sendMessage}
           disabled={loading}
         >
-          <Text style={styles.sendButtonText}>Gönder</Text>
+          <Text style={styles.sendButtonIcon}>➤</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -266,5 +275,8 @@ const styles = StyleSheet.create({
   inputContainer: { flexDirection: "row", padding: 16, borderTopWidth: 1 },
   input: { flex: 1, borderWidth: 1, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
   sendButton: { backgroundColor: "#007AFF", borderRadius: 20, paddingHorizontal: 20, justifyContent: "center" },
-  sendButtonText: { color: "#fff", fontWeight: "600" },
+  sendButtonIcon: { color: "#fff", fontSize: 20, fontWeight: "600" },
+  aiMessageRow: { flexDirection: "row", alignItems: "flex-start", marginVertical: 4 },
+  avatarContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#007AFF", alignItems: "center", justifyContent: "center", marginRight: 8 },
+  avatarIcon: { fontSize: 18 },
 });
