@@ -1092,10 +1092,32 @@ Yanıtı JSON formatında ver:
       const step = plan.steps[i];
       console.log(`\n🔄 Adım ${i + 1}/${plan.steps.length}: ${step.agent}`);
 
-      // Eğer input {{PREVIOUS_OUTPUT}} ise, önceki adımın çıktısını kullan
+      // Input placeholder'larını çöz
       let taskInput = step.input;
+
+      // {{PREVIOUS_OUTPUT}} formatı
       if (taskInput === '{{PREVIOUS_OUTPUT}}' && previousOutput) {
         taskInput = previousOutput;
+      }
+      // {{STEP_X_OUTPUT}} veya {{PREVIOUS_OUTPUT_OF_STEP_X}} formatı
+      else if (typeof taskInput === 'string' && taskInput.includes('{{')) {
+        // {{STEP_3_OUTPUT}} -> stepResults[2].output
+        const stepMatch = taskInput.match(/\{\{(?:STEP_|PREVIOUS_OUTPUT_OF_STEP_|PREVIOUS_CHOICE_)?(\d+)(?:_OUTPUT|_CHOICE)?\}\}/i);
+        if (stepMatch) {
+          const stepIndex = parseInt(stepMatch[1]) - 1;
+          if (stepResults[stepIndex] && stepResults[stepIndex].output) {
+            taskInput = stepResults[stepIndex].output;
+          }
+        }
+        // {{PREVIOUS_OUTPUT}} yazılı string içinde
+        else if (taskInput.includes('{{PREVIOUS_OUTPUT}}') && previousOutput) {
+          taskInput = taskInput.replace(/\{\{PREVIOUS_OUTPUT\}\}/g, previousOutput);
+        }
+      }
+      // Array ise (randomChoice gibi)
+      else if (Array.isArray(taskInput)) {
+        // Array olarak bırak
+        taskInput = taskInput;
       }
 
       // Agent ID'sini bul

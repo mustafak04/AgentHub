@@ -82,9 +82,20 @@ export default function Coordinate() {
         userMessage: currentInput,
       });
 
-      // AI cevabını Firestore'a kaydet
+      // AI cevabını işle ve Firestore'a kaydet
       if (response.data.success) {
-        await saveChatMessage(CHAT_ID, 'ai', response.data.response);
+        const fullResponse = response.data.response;
+
+        // Koordinatör başlığını çıkar
+        const withoutHeader = fullResponse.replace(/🤝 \*\*Koordinatör Sonucu\*\*\n\n/, '');
+
+        // --- ile ayrılmış adımları ayır
+        const steps = withoutHeader.split('---').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+
+        // Her adımı ayrı mesaj olarak kaydet
+        for (const step of steps) {
+          await saveChatMessage(CHAT_ID, 'ai', step);
+        }
       }
     } catch (error) {
       console.error("Hata:", error);
@@ -183,8 +194,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   header: { fontSize: 20, fontWeight: "bold" },
-  clearButton: { padding: 8 },
-  clearButtonText: { fontSize: 14, color: "#FF3B30" },
+  clearButton: { padding: 12, minWidth: 50, alignItems: 'center', justifyContent: 'center' },
+  clearButtonText: { fontSize: 24, color: "#FF3B30" },
   messageList: { paddingHorizontal: 16, paddingVertical: 8 },
   messageBubble: { maxWidth: "75%", padding: 12, borderRadius: 16, marginVertical: 4 },
   userBubble: { alignSelf: "flex-end", backgroundColor: "#007AFF" },
