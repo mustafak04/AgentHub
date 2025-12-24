@@ -1099,14 +1099,15 @@ Yanıtı JSON formatında ver:
       if (taskInput === '{{PREVIOUS_OUTPUT}}' && previousOutput) {
         taskInput = previousOutput;
       }
-      // {{STEP_X_OUTPUT}} veya {{PREVIOUS_OUTPUT_OF_STEP_X}} formatı
+      // {{STEP_X_OUTPUT}} veya {{PREVIOUS_OUTPUT_OF_STEP_X}} veya {{PREVIOUS_OUTPUT_FROM_STEP_X}} formatı
       else if (typeof taskInput === 'string' && taskInput.includes('{{')) {
-        // {{STEP_3_OUTPUT}} -> stepResults[2].output
-        const stepMatch = taskInput.match(/\{\{(?:STEP_|PREVIOUS_OUTPUT_OF_STEP_|PREVIOUS_CHOICE_)?(\d+)(?:_OUTPUT|_CHOICE)?\}\}/i);
+        // Genişletilmiş regex - tüm varyasyonları destekle
+        const stepMatch = taskInput.match(/\{\{(?:STEP_|PREVIOUS_(?:OUTPUT|CHOICE)_(?:OF|FROM)_STEP_|PREVIOUS_CHOICE_)?(\d+)(?:_OUTPUT|_CHOICE)?\}\}/i);
         if (stepMatch) {
           const stepIndex = parseInt(stepMatch[1]) - 1;
           if (stepResults[stepIndex] && stepResults[stepIndex].output) {
             taskInput = stepResults[stepIndex].output;
+            console.log(`🔄 Placeholder çözüldü: Step ${stepIndex + 1} -> ${taskInput.substring(0, 50)}...`);
           }
         }
         // {{PREVIOUS_OUTPUT}} yazılı string içinde
