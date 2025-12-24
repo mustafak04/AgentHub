@@ -155,7 +155,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           const articles = response.data.articles || [];
           if (!articles.length) {
             console.log('⚠️ Haber bulunamadı');
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await model.generateContent(
               `Kullanıcı "${topic}" hakkında haber istedi ama bulunamadı. Dili: ${language}. Yanıtı, mesajın dilinde ve nezaketli şekilde ver.`
             );
@@ -186,7 +186,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           Veri Listesi:
           [${rawList}]
           `;
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await model.generateContent(formatPrompt);
             aiResponse = result.response.text();
             console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
@@ -474,7 +474,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               const limitedText = textContent.substring(0, 3000);
               const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:\n\n${limitedText}`;
 
-              const summaryModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+              const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
               const summaryResult = await summaryModel.generateContent(summaryPrompt);
               const summary = summaryResult.response.text();
 
@@ -496,7 +496,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
         console.log('📝 Uzun metin özetleniyor...');
         const summaryPrompt = `Aşağıdaki metni özetle. Türkçe özet yaz, kısa ve öz ol:\n\n${userMessage}`;
 
-        const summaryModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const summaryResult = await summaryModel.generateContent(summaryPrompt);
         aiResponse = `📝 **Özet:**\n\n${summaryResult.response.text()}`;
 
@@ -1070,7 +1070,7 @@ Yanıtı JSON formatında ver:
 
     // ✅ JSON mode ile model oluştur
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         responseMimeType: 'application/json'
       }
