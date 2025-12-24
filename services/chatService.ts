@@ -5,6 +5,7 @@ export interface ChatMessage {
     id: string;
     role: 'user' | 'ai';
     content: string;
+    fullText?: string; // Koordine mod için - tüm adımlar
     timestamp: number;
     userId: string;
     chatId: string;
@@ -19,7 +20,8 @@ export interface ChatMessage {
 export const saveChatMessage = async (
     chatId: string,
     role: 'user' | 'ai',
-    content: string
+    content: string,
+    fullText?: string  // ← EKLE
 ): Promise<void> => {
     try {
         const currentUser = auth().currentUser;
@@ -27,13 +29,18 @@ export const saveChatMessage = async (
             throw new Error('Kullanıcı oturum açmamış');
         }
 
-        const messageData: Omit<ChatMessage, 'id'> = {
+        const messageData: any = {
             role,
             content,
             timestamp: Date.now(),
             userId: currentUser.uid,
             chatId,
         };
+
+        // fullText varsa ekle
+        if (fullText !== undefined) {
+            messageData.fullText = fullText;
+        }
 
         await firestore()
             .collection('users')

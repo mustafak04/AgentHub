@@ -49,6 +49,7 @@ export default function Coordinate() {
         const formattedMessages = history.map(msg => ({
           id: msg.id,
           text: msg.content,
+          fullText: msg.fullText,  // ← EKLE
           sender: msg.role === 'user' ? 'user' as const : 'agent' as const
         }));
         setMessages(formattedMessages);
@@ -59,6 +60,7 @@ export default function Coordinate() {
           const formatted = updatedMessages.map(msg => ({
             id: msg.id,
             text: msg.content,
+            fullText: msg.fullText,  // ← EKLE
             sender: msg.role === 'user' ? 'user' as const : 'agent' as const
           }));
           setMessages(formatted);
@@ -113,12 +115,27 @@ export default function Coordinate() {
         const withoutHeader = fullResponse.replace(/🤝 \*\*Koordinatör Sonucu\*\*\n\n/, '');
 
         // --- ile ayrılmış adımları ayır
-        const steps = withoutHeader.split('---').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+        const steps: string[] = withoutHeader.split('---').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
 
-        // Her adımı ayrı mesaj olarak kaydet
-        for (const step of steps) {
-          await saveChatMessage(CHAT_ID, 'ai', step);
+        // Her adımı ayrı mesaj olarak kaydet (özet + detay)
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+
+          // Adım başlığını çıkar (örn: "**1. exchange**")
+          const stepTitleMatch = step.match(/^\*\*(.*?)\*\*/);
+          const stepTitle = stepTitleMatch ? stepTitleMatch[1] : `Adım ${i + 1}`;
+
+          // ÖZET: Sadece başlık
+          const summary = `${stepTitle} ✓`;
+
+          // DETAY: Tam çıktı
+          const fullDetail = step;
+
+          // Firestore'a kaydet
+          await saveChatMessage(CHAT_ID, 'ai', summary, fullDetail);
         }
+
+        console.log(`📝 ${steps.length} adım ayrı mesajlar olarak kaydedildi`);
       }
     } catch (error) {
       console.error("Hata:", error);
