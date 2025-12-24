@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: "flex-end", backgroundColor: "#007AFF" },
   agentBubble: { alignSelf: "flex-start", backgroundColor: "#E5E5EA" },
   messageText: { fontSize: 16, color: "#000" },
-  loadingContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 8 },
+  loadingContainer: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 8 },
   loadingText: { marginLeft: 8, color: "#007AFF" },
   inputContainer: { flexDirection: "row", padding: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#ddd" },
   input: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
