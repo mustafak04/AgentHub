@@ -1074,9 +1074,12 @@ Yanıtı JSON formatında ver:
 
     // Fallback destekli plan oluştur
     const systemMessage = 'Sen bir görev planlayıcısısın. Sadece JSON formatında yanıt ver.';
-    const planText = await generateAIResponse(systemMessage, plannerPrompt);
+    let planText = await generateAIResponse(systemMessage, plannerPrompt);
 
     console.log('📄 Plan metni:', planText);
+
+    // Markdown code block wrapper'ı temizle (```json ... ```)
+    planText = planText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
 
     const plan = JSON.parse(planText);
     console.log('🤖 Koordinatör planı:', JSON.stringify(plan, null, 2));
