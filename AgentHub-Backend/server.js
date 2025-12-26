@@ -1219,7 +1219,3 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend çalışıyor!' });
-});
