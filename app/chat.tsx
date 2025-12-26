@@ -1,6 +1,6 @@
 import auth from '@react-native-firebase/auth';
 import axios from "axios";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
@@ -18,11 +18,11 @@ export default function Chat() {
   const userId = auth().currentUser?.uid;
 
   // Mesajları saklamak için state
-  const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent" }[]>([]);
+  const [messages, setMessages] = useState<{ id: string; text: string; sender: "user" | "agent"; fullText?: string }[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false); // Yükleniyor durumu
   const [loadingHistory, setLoadingHistory] = useState(true); // Geçmiş yükleniyor durumu
-
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const chatId = agentId as string; // Chat ID = agent ID
 
   // Uygulama açıldığında sohbet geçmişini yükle ve gerçek zamanlı listener kur
@@ -36,6 +36,7 @@ export default function Chat() {
         const formattedMessages = history.map(msg => ({
           id: msg.id,
           text: msg.content,
+          fullText: msg.fullText,
           sender: msg.role === 'user' ? 'user' as const : 'agent' as const
         }));
         setMessages(formattedMessages);
@@ -114,30 +115,65 @@ export default function Chat() {
   // Mesaj balonları
   const renderMessage = ({ item }: { item: typeof messages[0] }) => {
     if (item.sender === "user") {
-      // User message - solid gradient bubble
       return (
-        <View style={[styles.messageBubble, styles.userBubble]}>
-          <Text style={[styles.messageText, { color: "#fff" }]}>{item.text}</Text>
+        <View style={[
+          styles.messageBubble,
+          styles.userBubble,
+          {
+            backgroundColor: isDark ? 'transparent' : '#60A5FA',
+            borderWidth: isDark ? 2 : 0,
+            borderColor: isDark ? '#06B6D4' : 'transparent',
+            shadowColor: isDark ? '#06B6D4' : '#000',
+            shadowOffset: { width: 0, height: isDark ? 0 : 2 },
+            shadowOpacity: isDark ? 0.8 : 0.1,
+            shadowRadius: isDark ? 8 : 4,
+            elevation: isDark ? 0 : 2,
+          }
+        ]}>
+          <Text style={[styles.messageText, {
+            color: isDark ? '#06B6D4' : '#FFFFFF',
+            fontWeight: isDark ? '500' : 'normal'
+          }]}>
+            {item.text}
+          </Text>
         </View>
       );
     } else {
-      // AI mesajı - Avatar + Balon
+      // AI mesajı - Avatar + Genişletilebilir Balon
+      const isExpanded = expandedMessages.has(item.id);
+      const toggleExpand = () => {
+        setExpandedMessages(prev => {
+          const newSet = new Set(prev);
+          if (newSet.has(item.id)) {
+            newSet.delete(item.id);
+          } else {
+            newSet.add(item.id);
+          }
+          return newSet;
+        });
+      };
       return (
         <View style={styles.aiMessageRow}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarIcon}>🤖</Text>
           </View>
-
           {/* Message Bubble */}
-          <View
+          <TouchableOpacity
+            onPress={toggleExpand}
+            activeOpacity={0.7}
             style={[
               styles.messageBubble,
               styles.agentBubble,
               {
-                backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: isDark ? 'rgba(55, 65, 81, 0.8)' : '#FFFFFF',
                 borderWidth: 1,
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDark ? 0 : 0.1,
+                shadowRadius: 4,
+                elevation: isDark ? 0 : 3,
               }
             ]}
           >
@@ -150,9 +186,14 @@ export default function Chat() {
               strong: { fontWeight: 'bold' },
               em: { fontStyle: 'italic' },
             }}>
-              {item.text}
+              {isExpanded && item.fullText ? item.fullText : item.text}
             </Markdown>
-          </View>
+            {item.fullText && item.fullText !== item.text && (
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 8 }}>
+                {isExpanded ? '👆 Özet için dokun' : '👇 Detaylar için dokun'}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
       );
     }
@@ -160,14 +201,44 @@ export default function Chat() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, {
+        backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
+      }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={90}
     >
-      <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.header, { color: colors.text }]}>{agentName || "Koordine Mod"}</Text>
-        <TouchableOpacity onPress={clearHistory} style={styles.clearButton}>
-          <Text style={styles.clearButtonText}>🗑️ Temizle</Text>
+      {/* Modern Header */}
+      <View style={[
+        styles.headerContainer,
+        {
+          backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+        }
+      ]}>
+        {/* Geri Butonu */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={[styles.backButton, {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          }]}
+        >
+          <Text style={[styles.backIcon, { color: isDark ? '#FFF' : '#000' }]}>‹</Text>
+        </TouchableOpacity>
+        {/* Agent Info (Orta) */}
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: isDark ? '#FFF' : '#1F2937' }]}>
+            {agentName || "AI Agent"}
+          </Text>
+        </View>
+        {/* Temizle Butonu (Sağ) */}
+        <TouchableOpacity
+          onPress={clearHistory}
+          style={[styles.clearButton, {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          }]}
+        >
+          <Text style={[styles.clearText, { color: isDark ? '#06B6D4' : '#3B82F6' }]}>Temizle</Text>
         </TouchableOpacity>
       </View>
 
@@ -194,18 +265,43 @@ export default function Chat() {
         </View>
       )}
 
-      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+      {/* Input Container */}
+      <View style={[
+        styles.inputContainer,
+        {
+          backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+          borderTopColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+        }
+      ]}>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.input, color: colors.text, borderColor: colors.border }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F9FAFB',
+              color: isDark ? '#FFFFFF' : '#1F2937',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#D1D5DB',
+            }
+          ]}
           placeholder="Mesajınızı yazın..."
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
           value={inputText}
           onChangeText={setInputText}
           editable={!loading}
           multiline
         />
         <TouchableOpacity
-          style={[styles.sendButton, loading && { opacity: 0.5 }]}
+          style={[
+            styles.sendButton,
+            loading && { opacity: 0.5 },
+            {
+              backgroundColor: isDark ? '#06B6D4' : '#3B82F6',
+              shadowColor: isDark ? '#06B6D4' : '#3B82F6',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: isDark ? 0.8 : 0.3,
+              shadowRadius: isDark ? 12 : 4,
+              elevation: isDark ? 0 : 3,
+            }
+          ]}
           onPress={sendMessage}
           disabled={loading}
         >
@@ -217,23 +313,130 @@ export default function Chat() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#ddd" },
-  header: { fontSize: 20, fontWeight: "bold" },
-  clearButton: { padding: 12, minWidth: 50, alignItems: 'center', justifyContent: 'center' },
-  clearButtonText: { fontSize: 24, color: "#FF3B30" },
-  messageList: { paddingHorizontal: 16, paddingVertical: 8 },
-  messageBubble: { maxWidth: "75%", padding: 12, borderRadius: 16, marginVertical: 4 },
-  userBubble: { alignSelf: "flex-end", backgroundColor: "#007AFF" },
-  agentBubble: { alignSelf: "flex-start", backgroundColor: "#E5E5EA" },
-  messageText: { fontSize: 16, color: "#000" },
-  loadingContainer: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 8 },
-  loadingText: { marginLeft: 8, color: "#007AFF" },
-  inputContainer: { flexDirection: "row", padding: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#ddd" },
-  input: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, maxHeight: 100 },
-  sendButton: { backgroundColor: "#007AFF", borderRadius: 20, paddingHorizontal: 20, justifyContent: "center" },
-  sendButtonIcon: { color: "#fff", fontSize: 20, fontWeight: "600" },
-  aiMessageRow: { flexDirection: "row", alignItems: "flex-start", marginVertical: 4 },
-  avatarContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#007AFF", alignItems: "center", justifyContent: "center", marginRight: 8 },
-  avatarIcon: { fontSize: 18 },
+  // Container
+  container: {
+    flex: 1
+  },
+
+  // Header
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  clearButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  clearText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
+  // Messages
+  messageList: {
+    paddingHorizontal: 16,
+    paddingVertical: 8
+  },
+  messageBubble: {
+    maxWidth: "75%",
+    padding: 14,
+    borderRadius: 18,
+    marginVertical: 4,
+  },
+  userBubble: {
+    alignSelf: "flex-end",
+  },
+  agentBubble: {
+    alignSelf: "flex-start",
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  aiMessageRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginVertical: 4
+  },
+
+  // Avatar
+  avatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  avatarIcon: {
+    fontSize: 18,
+  },
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8
+  },
+  loadingText: {
+    marginLeft: 8,
+    color: "#007AFF"
+  },
+
+  // Input
+  inputContainer: {
+    flexDirection: "row",
+    padding: 16,
+    borderTopWidth: 1
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    maxHeight: 100
+  },
+
+  // Send Button
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonIcon: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+  },
 });

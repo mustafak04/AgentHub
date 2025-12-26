@@ -69,51 +69,88 @@ export default function Individual() {
 
   const renderAgentCard = ({ item }: { item: typeof agents[0] }) => (
     <TouchableOpacity
-      style={[styles.card, { borderLeftColor: item.color, borderLeftWidth: 4, backgroundColor: colors.card }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : '#FFFFFF',
+          borderWidth: isDark ? 2 : 1,
+          borderColor: isDark ? '#06B6D4' : 'rgba(0, 0, 0, 0.05)',
+          shadowColor: isDark ? '#06B6D4' : '#000',
+          shadowOffset: { width: 0, height: isDark ? 0 : 2 },
+          shadowOpacity: isDark ? 0.3 : 0.08,
+          shadowRadius: isDark ? 8 : 4,
+          elevation: isDark ? 0 : 2,
+        }
+      ]}
       onPress={() => {
         router.push(`/chat?agentId=${item.id}&agentName=${item.name}`);
       }}
     >
       <Text style={styles.emoji}>{item.emoji}</Text>
       <View style={styles.textContainer}>
-        <Text style={[styles.agentName, { color: colors.text }]}>{item.name}</Text>
-        <Text style={[styles.agentDescription, { color: colors.textSecondary }]}>{item.description}</Text>
+        <Text style={[styles.agentName, {
+          color: isDark ? '#FFFFFF' : '#1F2937',
+          fontWeight: '600',
+          fontSize: 15,
+        }]}>
+          {item.name}
+        </Text>
+        <Text style={[styles.agentDescription, {
+          color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
+          fontSize: 12,
+        }]} numberOfLines={2}>
+          {item.description}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>👤 Agent Listesi</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        {filteredAgents.length} agent {searchQuery || selectedCategories.length > 0 ? 'bulundu' : 'mevcut'}
+    <View style={[styles.container, {
+      backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
+    }]}>
+      <Text style={[styles.title, {
+        color: isDark ? '#FFFFFF' : '#1F2937',
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 4,
+      }]}>
+        Agent Listesi
+      </Text>
+      <Text style={[styles.subtitle, {
+        color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
+        fontSize: 14,
+      }]}>
+        {filteredAgents.length} Agent
       </Text>
 
-
-
-
-
       {/* Arama Çubuğu - CSS Glassmorphism */}
-      <View
-        style={[
-          styles.searchContainer,
-          {
-            backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
-          }
-        ]}
-      >
+      <View style={[
+        styles.searchContainer,
+        {
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDark ? 0 : 0.05,
+          shadowRadius: 4,
+        }
+      ]}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
+          style={[styles.searchInput, {
+            color: isDark ? '#FFFFFF' : '#1F2937'
+          }]}
           placeholder="Agent ara..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text style={[styles.clearButton, { color: colors.textSecondary }]}>✕</Text>
+            <Text style={[styles.clearButton, {
+              color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280'
+            }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -132,12 +169,26 @@ export default function Individual() {
               key={category.id}
               style={[
                 styles.categoryButton,
-                { backgroundColor: isSelected ? category.color : colors.buttonBackground }
+                {
+                  backgroundColor: isSelected
+                    ? (isDark ? '#06B6D4' : '#3B82F6')
+                    : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#F3F4F6'),
+                  borderWidth: isSelected && isDark ? 1 : 0,
+                  borderColor: isSelected && isDark ? '#06B6D4' : 'transparent',
+                  shadowColor: isSelected && isDark ? '#06B6D4' : '#000',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: isSelected && isDark ? 0.6 : 0,
+                  shadowRadius: isSelected && isDark ? 8 : 0,
+                }
               ]}
               onPress={() => toggleCategory(category.id)}
             >
               <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-              <Text style={[styles.categoryText, { color: isSelected ? '#fff' : colors.buttonText }]}>
+              <Text style={[styles.categoryText, {
+                color: isSelected
+                  ? '#FFFFFF'
+                  : (isDark ? 'rgba(255, 255, 255, 0.7)' : '#6B7280')
+              }]}>
                 {category.name}
               </Text>
             </TouchableOpacity>
@@ -150,13 +201,10 @@ export default function Individual() {
         data={filteredAgents}
         renderItem={renderAgentCard}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>🔍 Sonuç bulunamadı</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Farklı bir arama deneyin</Text>
-          </View>
-        }
+        numColumns={2}  // 2-column grid
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -165,44 +213,24 @@ export default function Individual() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingTop: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
+    marginTop: 8,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    marginBottom: 0,
-  },
-  themeToggle: {
-    padding: 8,
-  },
-  themeIcon: {
-    fontSize: 28,
+    marginBottom: 16,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
   },
   searchIcon: {
     fontSize: 18,
@@ -210,34 +238,28 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 44,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 15,
   },
   clearButton: {
     fontSize: 18,
-    color: '#999',
     padding: 4,
   },
   categoryScrollView: {
-    marginBottom: 12,
-    height: 52,
+    marginBottom: 16,
+    height: 48,
     flexGrow: 0,
     flexShrink: 0,
   },
   categoryContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingRight: 16,
   },
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    marginRight: 8,
-    minWidth: 110,
-    justifyContent: 'center',
+    marginRight: 10,
   },
   categoryEmoji: {
     fontSize: 16,
@@ -245,60 +267,36 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  listContainer: {
-    paddingHorizontal: 16,
+  listContent: {
     paddingBottom: 20,
   },
-  card: {
-    backgroundColor: "#fff",
-    padding: 16,
+  row: {
+    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  card: {
+    flex: 1,
+    maxWidth: '48%',
     borderRadius: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-    flexDirection: "row",
-    alignItems: "center",
+    padding: 14,
+    marginHorizontal: 4,
   },
   emoji: {
-    fontSize: 40,
-    marginRight: 16,
+    fontSize: 36,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   textContainer: {
-    flex: 1,
+    alignItems: 'center',
   },
   agentName: {
-    fontSize: 18,
-    fontWeight: "600",
     marginBottom: 4,
-    color: "#1a1a1a",
+    textAlign: 'center',
   },
   agentDescription: {
-    fontSize: 14,
-    color: "#666",
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#999',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#bbb',
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });
