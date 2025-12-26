@@ -344,8 +344,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 60 : 32,
   },
   backButton: {
     width: 40,
@@ -433,30 +433,31 @@ const styles = StyleSheet.create({
   // Input
   inputContainer: {
     flexDirection: "row",
-    padding: 16,
+    padding: 20,
     borderTopWidth: 1
   },
   input: {
     flex: 1,
     borderWidth: 1,
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    maxHeight: 100
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginRight: 12,
+    maxHeight: 120,
+    fontSize: 16,
   },
 
   // Send Button
   sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendButtonIcon: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "600",
   },
 });
