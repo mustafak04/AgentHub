@@ -174,7 +174,12 @@ async function processAgentRequest(agentId, agentName, userMessage) {
         const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
         console.log(`📡 Wikipedia API isteği: ${url}`);
         try {
-          const { data: wikiData } = await axios.get(url);
+          const { data: wikiData } = await axios.get(url, {
+            headers: {
+              'User-Agent': 'AgentHub/1.0 (https://github.com/mustafak04; mustafa@agenthub.app)',
+              'Accept': 'application/json'
+            }
+          });
           let wikiResponse = `📚 ${wikiData.title}\n`;
           if (wikiData.description) wikiResponse += `(${wikiData.description})\n\n`;
           wikiResponse += `${wikiData.extract}\n`;

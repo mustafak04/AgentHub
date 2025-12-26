@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
@@ -185,7 +185,11 @@ export default function Chat() {
               heading1: { fontSize: 20, fontWeight: 'bold', color: colors.text },
               strong: { fontWeight: 'bold' },
               em: { fontStyle: 'italic' },
-            }}>
+            }}
+              onLinkPress={(url) => {
+                Linking.openURL(url).catch(err => console.error("Link açılamadı:", err));
+                return false;
+              }}>
               {isExpanded && item.fullText ? item.fullText : item.text}
             </Markdown>
             {item.fullText && item.fullText !== item.text && (
