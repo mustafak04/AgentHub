@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
@@ -187,7 +187,7 @@ export default function Chat() {
         <View style={styles.aiMessageRow}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+            <Text style={styles.avatarIcon}>🤖</Text>
           </View>
           {/* Message Bubble */}
           <TouchableOpacity

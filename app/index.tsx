@@ -1,7 +1,7 @@
 import auth from '@react-native-firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
-import { Alert, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from './context/ThemeContext';
 
 export default function HomeScreen() {
@@ -94,10 +94,7 @@ export default function HomeScreen() {
 
       {/* Content */}
       <View style={styles.content}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-          <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 40, height: 40, marginRight: 10 }} resizeMode="contain" />
-          <Text style={[styles.title, { color: colors.text, marginBottom: 0 }]}>AgentHub</Text>
-        </View>
+        <Text style={[styles.title, { color: colors.text }]}>🤖 AgentHub</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Çok Ajanlı Yapay Zeka Destekli Mobil Asistan</Text>
 
         <View style={styles.cardContainer}>
@@ -128,7 +125,7 @@ export default function HomeScreen() {
                             Tek bir agent ile sohbet et
                           </Text>
                         </View>
-                        <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
+                        <Text style={styles.cardIcon}>🤖</Text>
                       </View>
                     </View>
                   ) : (
@@ -148,7 +145,7 @@ export default function HomeScreen() {
                             Tek bir agent ile sohbet et
                           </Text>
                         </View>
-                        <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
+                        <Text style={styles.cardIcon}>🤖</Text>
                       </View>
                     </LinearGradient>
                   )}
