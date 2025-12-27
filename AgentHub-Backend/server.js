@@ -72,8 +72,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           );
           const weatherData = weatherResponse.data;
           aiResponse = `
-<OZET>📍 ${weatherData.name}, ${weatherData.sys.country}</OZET>
-
+📍 **${weatherData.name}, ${weatherData.sys.country}**
 🌡️ Sıcaklık: ${weatherData.main.temp}°C (Hissedilen: ${weatherData.main.feels_like}°C)
 ☁️ Durum: ${weatherData.weather[0].description}
 💧 Nem: ${weatherData.main.humidity}%
@@ -103,7 +102,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
         const sourceLang = match[2].trim();
         const targetLang = match[3].trim();
 
-        aiResponse = `<OZET>Çeviri (${sourceLang} → ${targetLang}): ${translation}</OZET>\n\n[${translation}]`.trim();
+        aiResponse = `Çeviri (${sourceLang} → ${targetLang}):\n[${translation}]`.trim();
         console.log(`✅ Çeviri: ${sourceLang} → ${targetLang} | ${translation}`);
       }
     }
@@ -157,7 +156,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           `;
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await model.generateContent(formatPrompt);
-            aiResponse = `<OZET>📰 "${topic}" Haberleri</OZET>\n\n` + result.response.text();
+            aiResponse = result.response.text();
             console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
           }
         } catch (err) {
@@ -181,7 +180,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
               'Accept': 'application/json'
             }
           });
-          let wikiResponse = `<OZET>📚 ${wikiData.title}</OZET>\n\n`;
+          let wikiResponse = `📚 ${wikiData.title}\n`;
           if (wikiData.description) wikiResponse += `(${wikiData.description})\n\n`;
           wikiResponse += `${wikiData.extract}\n`;
           if (wikiData.content_urls && wikiData.content_urls.desktop)
@@ -219,9 +218,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
               minute: '2-digit'
             });
             aiResponse = `
-<OZET>💱 1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}</OZET>
-
-**GÜNCEL DÖVİZ KURU**
+💱 **GÜNCEL DÖVİZ KURU**
 ${fromCurrency} → ${toCurrency}
 **1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}**
 📊 **Örnek Çevrimler:**
@@ -260,7 +257,7 @@ ${fromCurrency} → ${toCurrency}
           const encodedPrompt = encodeURIComponent(prompt);
           const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
 
-          aiResponse = `<OZET>🎨 Görsel Oluşturuldu</OZET>\n\n![AI Generated Image](${imageUrl})
+          aiResponse = `![AI Generated Image](${imageUrl})
 
 Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
@@ -315,8 +312,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
             });
 
             // 4. Formatlı liste oluştur
-            let videoList = `<OZET>🎬 "${searchQuery}" için ${videos.length} video</OZET>\n\n`;
-            videoList += `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
+            let videoList = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
 
             videos.forEach((video, index) => {
               const title = video.snippet.title;
@@ -378,8 +374,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!books || books.length === 0) {
             aiResponse = `"${searchQuery}" için kitap bulunamadı.`;
           } else {
-            let bookList = `<OZET>📚 "${searchQuery}" için ${books.length} kitap</OZET>\n\n`;
-            bookList += `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n`;
+            let bookList = `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n`;
             books.forEach((book, index) => {
               const volumeInfo = book.volumeInfo;
               const title = volumeInfo.title || 'Başlık yok';
@@ -456,7 +451,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
               const summaryResult = await summaryModel.generateContent(summaryPrompt);
               const summary = summaryResult.response.text();
 
-              aiResponse = `<OZET>📝 Özet Hazır</OZET>\n\n📝 **Özet:**\n\n${summary}\n\n🔗 Kaynak: ${url}`;
+              aiResponse = `📝 **Özet:**\n\n${summary}\n\n🔗 Kaynak: ${url}`;
             }
 
             console.log('✅ URL özeti oluşturuldu');
@@ -476,7 +471,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
 
         const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const summaryResult = await summaryModel.generateContent(summaryPrompt);
-        aiResponse = `<OZET>📝 Metin Özeti</OZET>\n\n📝 **Özet:**\n\n${summaryResult.response.text()}`;
+        aiResponse = `📝 **Özet:**\n\n${summaryResult.response.text()}`;
 
         console.log('✅ Metin özeti oluşturuldu');
       }
@@ -496,7 +491,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
             aiResponse = `"${word}" kelimesi bulunamadı.`;
           } else {
             const meanings = data.meanings;
-            let dictResponse = `<OZET>📖 ${word}</OZET>\n\n📖 **${word}**\n\n`;
+            let dictResponse = `📖 **${word}**\n\n`;
             // Telaffuz
             if (data.phonetic || data.phonetics?.[0]?.text) {
               const phonetic = data.phonetic || data.phonetics[0].text;
@@ -554,8 +549,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!results.length) {
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
-            let movieList = `<OZET>🎬 "${query}" için ${results.length} sonuç</OZET>\n\n`;
-            movieList += `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
+            let movieList = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
             results.forEach((item, index) => {
               const title = item.title || item.name;
               const type = item.media_type === 'movie' ? '🎥 Film' : '📺 Dizi';
@@ -619,8 +613,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!artists.length && !tracks.length) {
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
-            let musicList = `<OZET>🎵 "${query}" için sonuçlar</OZET>\n\n`;
-            musicList += `🎵 **"${query}" için sonuçlar:**\n\n`;
+            let musicList = `🎵 **"${query}" için sonuçlar:**\n\n`;
             // Sanatçılar
             if (artists.length) {
               musicList += `**🎤 Sanatçılar:**\n`;
@@ -683,8 +676,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!podcasts.length) {
             aiResponse = `"${query}" için podcast bulunamadı. (Toplam: ${response.data.total || 0})`;
           } else {
-            let podcastList = `<OZET>🎙️ "${query}" için ${podcasts.length} podcast</OZET>\n\n`;
-            podcastList += `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
+            let podcastList = `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
 
             podcasts.slice(0, 5).forEach((podcast, index) => {
               const title = podcast.title_original || podcast.title_highlighted || podcast.title || 'Başlık yok';
@@ -732,8 +724,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!games.length) {
             aiResponse = `"${query}" için oyun bulunamadı.`;
           } else {
-            let gameList = `<OZET>🎮 "${query}" için ${games.length} oyun</OZET>\n\n`;
-            gameList += `🎮 **"${query}" için ${games.length} oyun:**\n\n`;
+            let gameList = `🎮 **"${query}" için ${games.length} oyun:**\n\n`;
             games.forEach((game, index) => {
               const title = game.name;
               const rating = game.rating ? game.rating.toFixed(1) : 'N/A';
@@ -780,8 +771,7 @@ Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
           if (!recipes.length) {
             aiResponse = `"${query}" için tarif bulunamadı.`;
           } else {
-            let recipeList = `<OZET>🍳 "${query}" için ${recipes.length} tarif</OZET>\n\n`;
-            recipeList += `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
+            let recipeList = `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
             recipes.forEach((recipe, index) => {
               const title = recipe.title;
               const readyInMinutes = recipe.readyInMinutes || 'N/A';

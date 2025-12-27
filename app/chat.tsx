@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
@@ -98,39 +98,8 @@ export default function Chat() {
       });
 
       // AI cevabını Firestore'a kaydet
-      if (response.data.success || response.data.reply) {
-        const fullResponse = response.data.reply || response.data.response; // Fallback just in case
-
-        let summary = "";
-        let fullText = fullResponse;
-
-        // <OZET> etiketlerini kontrol et
-        const ozetMatch = fullResponse.match(/<OZET>(.*?)<\/OZET>/s);
-        if (ozetMatch) {
-          summary = ozetMatch[1].trim();
-          // Full text'ten etiketleri temizle ama içeriği koru
-          fullText = fullResponse.replace(/<OZET>|<\/OZET>/g, '').trim();
-        } else {
-          // Etiket yoksa eski mantık: İlk satırı özet olarak al
-          const lines = fullResponse.split('\n');
-          if (lines.length > 0) {
-            summary = lines[0];
-            // Eğer ilk satır boşsa veya çok kısaysa ikinci satıra bakabiliriz
-            if (summary.trim().length < 5 && lines.length > 1) {
-              summary = lines[1];
-            }
-          }
-        }
-
-        let contentToSave = summary || fullResponse;
-        let fullTextToSave = fullText || fullResponse;
-
-        // Eğer özet ve detay aynıysa, detay kaydetmeye gerek yok (UI'da sadece text gösterilir)
-        if (contentToSave === fullTextToSave) {
-          fullTextToSave = undefined;
-        }
-
-        await saveChatMessage(chatId, 'ai', contentToSave, fullTextToSave);
+      if (response.data.success) {
+        await saveChatMessage(chatId, 'ai', response.data.response);
       } else {
         throw new Error("API hatası");
       }
@@ -187,7 +156,7 @@ export default function Chat() {
         <View style={styles.aiMessageRow}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarIcon}>🤖</Text>
+            <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
           </View>
           {/* Message Bubble */}
           <TouchableOpacity
