@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "./context/ThemeContext";
 
 const agents = [
@@ -183,7 +183,11 @@ export default function Individual() {
               ]}
               onPress={() => toggleCategory(category.id)}
             >
-              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              {category.emoji === '🤖' ? (
+                <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 40, height: 40, marginRight: 6 }} resizeMode="contain" />
+              ) : (
+                <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              )}
               <Text style={[styles.categoryText, {
                 color: isSelected
                   ? '#FFFFFF'

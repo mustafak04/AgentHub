@@ -1,8 +1,8 @@
-import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from './context/ThemeContext';
 
 export default function LoginScreen() {
@@ -89,11 +89,7 @@ export default function LoginScreen() {
           <View style={[styles.logoContainer, {
             backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : 'rgba(59, 130, 246, 0.15)',
           }]}>
-            <MaterialCommunityIcons
-              name="robot-happy"
-              size={48}
-              color={isDark ? '#06B6D4' : '#3B82F6'}
-            />
+            <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
           </View>
           <Text style={[styles.title, {
             color: isDark ? '#FFFFFF' : '#1F2937'
