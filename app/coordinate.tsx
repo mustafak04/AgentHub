@@ -115,22 +115,36 @@ export default function Coordinate() {
         // Koordinatör başlığını çıkar
         const withoutHeader = fullResponse.replace(/🤝 \*\*Koordinatör Sonucu\*\*\n\n/, '');
 
-        // --- ile ayrılmış adımları ayır
-        const steps: string[] = withoutHeader.split('---').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+        // ===STEP_DELIMITER=== ile ayrılmış adımları ayır
+        const steps: string[] = withoutHeader.split('===STEP_DELIMITER===').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
 
         // Her adımı ayrı mesaj olarak kaydet (özet + detay)
         for (let i = 0; i < steps.length; i++) {
           const step = steps[i];
 
-          // Adım başlığını çıkar (örn: "**1. exchange**")
-          const stepTitleMatch = step.match(/^\*\*(.*?)\*\*/);
-          const stepTitle = stepTitleMatch ? stepTitleMatch[1] : `Adım ${i + 1}`;
+          // Agent'ın kendi özet/detay ayrımı var mı kontrol et (---)
+          const parts = step.split('\n\n---\n\n');
 
-          // ÖZET: Sadece başlık
-          const summary = `${stepTitle} ✓`;
+          let summary = '';
+          let fullDetail = '';
 
-          // DETAY: Tam çıktı
-          const fullDetail = step;
+          if (parts.length > 1) {
+            // Agent özet/detay destekliyor
+            const summaryPart = parts[0].trim();
+            const detailPart = parts[1].trim();
+
+            // Başlığı özetten çek (örn: "**1. weather**")
+            const lines = summaryPart.split('\n');
+            const header = lines[0];
+
+            summary = summaryPart;
+            // Detay kısmına başlığı ekle ki tutarlı görünsün
+            fullDetail = `${header}\n\n${detailPart}`;
+          } else {
+            // Desteklemeyenler veya hatalar için fallback
+            summary = step;
+            fullDetail = step;
+          }
 
           // Firestore'a kaydet
           await saveChatMessage(CHAT_ID, 'ai', summary, fullDetail);

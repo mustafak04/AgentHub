@@ -1464,9 +1464,9 @@ Yanıtı JSON formatında ver:
     if (stepResults.length > 0) {
       stepResults.forEach((step, index) => {
         if (step.output) {
-          finalResponse += `**${index + 1}. ${step.agent}**\n${step.output}\n\n---\n\n`;
+          finalResponse += `**${index + 1}. ${step.agent}**\n${step.output}\n\n===STEP_DELIMITER===\n\n`;
         } else if (step.error) {
-          finalResponse += `**${index + 1}. ${step.agent}** ❌\nHata: ${step.error}\n\n---\n\n`;
+          finalResponse += `**${index + 1}. ${step.agent}** ❌\nHata: ${step.error}\n\n===STEP_DELIMITER===\n\n`;
         }
       });
     } else {
