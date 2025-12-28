@@ -295,7 +295,7 @@ ${fromCurrency} → ${toCurrency}
 🕐 Son Güncelleme: ${lastUpdate}
 `.trim();
 
-            aiResponse = `${summary}\n\n---\n\n${detail}`;
+            aiResponse = `${summary}\n\n---\n\n${summary}\n\n${detail}`;
             console.log(`✅ Döviz kuru başarıyla alındı: 1 ${fromCurrency} = ${rate} ${toCurrency}`);
           } else {
             console.log('⚠️ Döviz kuru bulunamadı');
