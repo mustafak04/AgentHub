@@ -1123,11 +1123,16 @@ ${fromCurrency} → ${toCurrency}
             const change24h = data.usd_24h_change?.toFixed(2) || 'N/A';
             const changeEmoji = parseFloat(change24h) >= 0 ? '📈' : '📉';
             const marketCap = data.usd_market_cap ? `$${(data.usd_market_cap / 1000000000).toFixed(2)}B` : 'N/A';
-            aiResponse = `₿ **${coinId.toUpperCase()} Fiyat:**\n\n`;
-            aiResponse += `💵 USD: $${usdPrice}\n`;
-            aiResponse += `💵 TRY: ₺${tryPrice}\n`;
-            aiResponse += `${changeEmoji} 24s Değişim: ${change24h}%\n`;
-            aiResponse += `📊 Piyasa Değeri: ${marketCap}`;
+
+            const summary = `₿ **${coinId.toUpperCase()} Fiyat:**\n\n💵 USD: $${usdPrice}`;
+
+            let detail = `₿ **${coinId.toUpperCase()} Fiyat:**\n\n`;
+            detail += `💵 USD: $${usdPrice}\n`;
+            detail += `💵 TRY: ₺${tryPrice}\n`;
+            detail += `${changeEmoji} 24s Değişim: ${change24h}%\n`;
+            detail += `📊 Piyasa Değeri: ${marketCap}`;
+
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Crypto fiyat alındı');
         } catch (cryptoError) {
