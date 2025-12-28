@@ -71,7 +71,12 @@ async function processAgentRequest(agentId, agentName, userMessage) {
             `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=metric&lang=tr`
           );
           const weatherData = weatherResponse.data;
-          aiResponse = `
+          const summary = `
+📍 **${weatherData.name}, ${weatherData.sys.country}**
+🌡️ Sıcaklık: ${weatherData.main.temp}°C (Hissedilen: ${weatherData.main.feels_like}°C)
+`.trim();
+
+          const detail = `
 📍 **${weatherData.name}, ${weatherData.sys.country}**
 🌡️ Sıcaklık: ${weatherData.main.temp}°C (Hissedilen: ${weatherData.main.feels_like}°C)
 ☁️ Durum: ${weatherData.weather[0].description}
@@ -79,7 +84,9 @@ async function processAgentRequest(agentId, agentName, userMessage) {
 💨 Rüzgar: ${weatherData.wind.speed} m/s
 🌅 Gün doğumu: ${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
 🌇 Gün batımı: ${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-          `.trim();
+`.trim();
+
+          aiResponse = `${summary}\n\n---\n\n${detail}`;
           console.log('✅ Hava durumu bilgisi başarıyla alındı');
         } catch (weatherError) {
           console.error('❌ Hava durumu hatası:', weatherError.message);

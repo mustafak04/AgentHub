@@ -99,7 +99,19 @@ export default function Chat() {
 
       // AI cevabını Firestore'a kaydet
       if (response.data.success) {
-        await saveChatMessage(chatId, 'ai', response.data.response);
+        const fullResponse = response.data.response;
+
+        // Özet ve detay ayrımı var mı?
+        if (fullResponse.includes('---')) {
+          const parts = fullResponse.split('---');
+          const summary = parts[0].trim();
+          const detail = parts[1].trim();
+
+          await saveChatMessage(chatId, 'ai', summary, detail);
+        } else {
+          // Normal mesaj
+          await saveChatMessage(chatId, 'ai', fullResponse);
+        }
       } else {
         throw new Error("API hatası");
       }
