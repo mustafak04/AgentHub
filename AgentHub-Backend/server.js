@@ -1166,10 +1166,24 @@ ${fromCurrency} → ${toCurrency}
               });
 
               const teams = teamsResponse.data.teams || [];
-              foundTeam = teams.find(t =>
-                t.name.toLowerCase().includes(teamName.toLowerCase()) ||
-                t.shortName.toLowerCase().includes(teamName.toLowerCase())
-              );
+
+              // 1. Tam eşleşme ara (Short Name)
+              foundTeam = teams.find(t => t.shortName && t.shortName.toLowerCase() === teamName.toLowerCase());
+
+              // 2. Tam eşleşme ara (Name)
+              if (!foundTeam) {
+                foundTeam = teams.find(t => t.name.toLowerCase() === teamName.toLowerCase());
+              }
+
+              // 3. İçeren ara (önce Short Name)
+              if (!foundTeam) {
+                foundTeam = teams.find(t => t.shortName && t.shortName.toLowerCase().includes(teamName.toLowerCase()));
+              }
+
+              // 4. İçeren ara (Name)
+              if (!foundTeam) {
+                foundTeam = teams.find(t => t.name.toLowerCase().includes(teamName.toLowerCase()));
+              }
 
               if (foundTeam) {
                 console.log(`✅ Takım bulundu: ${foundTeam.name}`);
