@@ -41,19 +41,22 @@ const agentPrompts = {
   ÖRNEKLER:
   - "21 + 34" → Sonuç: 55  
   - "Her kenarı 5 metre olan bir karenin alanı nedir?"  
-    Cevap:  
+    Adım Adım Çözüm:  
     Alan = kenar × kenar  
-    Alan = 5 × 5 = 25 metrekare  
+    Alan = 5 × 5 = 25 metrekare
+    Sonuç: 25 metrekare  
   - "Bir mal 200 TL, %20 indirim uygulanırsa kaça düşer?"  
-    Cevap:  
+    Adım Adım Çözüm:  
     İndirimli fiyat = 200 - (200 × 0,20) = 160 TL
+    Sonuç: 160 TL
   - "3x+5=17, x kaçtır?"  
-    Cevap:  
+    Adım Adım Çözüm:  
     3x + 5 = 17  
     3x = 17 - 5  
     3x = 12  
     x = 12 / 3  
     x = 4
+    Sonuç: 4
 
   Sonucu, detayı ve adımları kullanıcıya her zaman ayrı ayrı göster.
   Kısa sorularda bile açıklama üret.`,
