@@ -1027,7 +1027,10 @@ ${fromCurrency} → ${toCurrency}
         // QR Server API (ücretsiz, key yok)
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(content)}`;
 
-        aiResponse = `📱 **QR Kod oluşturuldu:**\n\n![QR Kod](${qrUrl})\n\n🔗 İçerik: ${content}`;
+        const summary = `![QR Kod](${qrUrl})`;
+        const detail = `![QR Kod](${qrUrl})\n\n🔗${content}`;
+
+        aiResponse = `${summary}\n\n---\n\n${detail}`;
 
         console.log('✅ QR kod oluşturuldu');
       }
