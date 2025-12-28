@@ -1083,13 +1083,17 @@ ${fromCurrency} → ${toCurrency}
           const randomIndex = Math.floor(Math.random() * items.length);
           const chosen = items[randomIndex];
 
-          aiResponse = `🎲 **Rastgele Seçim:**\n\n`;
-          aiResponse += `🎯 Seçilen: **${chosen}**\n\n`;
-          aiResponse += `📋 Seçenekler:\n`;
+          const summary = `🎲 **Rastgele Seçim:**\n\n🎯 Seçilen: **${chosen}**`;
+
+          let detail = `🎲 **Rastgele Seçim:**\n\n`;
+          detail += `🎯 Seçilen: **${chosen}**\n\n`;
+          detail += `📋 Seçenekler:\n`;
           items.forEach((item, i) => {
             const emoji = i === randomIndex ? '✅' : '⬜';
-            aiResponse += `${emoji} ${item}\n`;
+            detail += `${emoji} ${item}\n`;
           });
+
+          aiResponse = `${summary}\n\n---\n\n${detail}`;
         }
         console.log('✅ Rastgele seçim yapıldı');
       }
@@ -1121,7 +1125,7 @@ ${fromCurrency} → ${toCurrency}
             const marketCap = data.usd_market_cap ? `$${(data.usd_market_cap / 1000000000).toFixed(2)}B` : 'N/A';
             aiResponse = `₿ **${coinId.toUpperCase()} Fiyat:**\n\n`;
             aiResponse += `💵 USD: $${usdPrice}\n`;
-            aiResponse += `₺ TRY: ₺${tryPrice}\n`;
+            aiResponse += `💵 TRY: ₺${tryPrice}\n`;
             aiResponse += `${changeEmoji} 24s Değişim: ${change24h}%\n`;
             aiResponse += `📊 Piyasa Değeri: ${marketCap}`;
           }
