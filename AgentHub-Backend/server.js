@@ -339,9 +339,10 @@ ${fromCurrency} → ${toCurrency}
           const encodedPrompt = encodeURIComponent(prompt);
           const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
 
-          aiResponse = `![AI Generated Image](${imageUrl})
+          const summary = `![AI Generated Image](${imageUrl})`;
+          const detail = `🎨 **Prompt:** ${prompt}`;
 
-Not: AI tarafından oluşturulmuştur (Pollinations.AI)`;
+          aiResponse = `${summary}\n\n---\n\n${detail}`;
 
           console.log('✅ Görsel başarıyla oluşturuldu (Pollinations.AI)');
         } catch (imageError) {
