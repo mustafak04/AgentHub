@@ -990,6 +990,20 @@ ${fromCurrency} → ${toCurrency}
         }
       }
     }
+    // ============ FITNESS AGENT (agentId === '18') ============
+    if (agentId === '18') {
+      // Egzersiz isimlerini çek
+      const exerciseMatches = aiResponse.match(/\d+\.\s*\*\*(.*?)\*\*/g);
+      if (exerciseMatches) {
+        let summary = `💪 **Antrenman Planı:**\n\n`;
+        exerciseMatches.forEach(match => {
+          summary += `${match}\n`;
+        });
+
+        // Detay zaten aiResponse'un kendisi
+        aiResponse = `${summary}\n\n---\n\n${aiResponse}`;
+      }
+    }
     // ============ QR KOD AGENT (agentId === '20') ============
     if (agentId === '20' && aiResponse.includes('[QR:')) {
       const match = aiResponse.match(/\[QR:(.*?)\]/);
