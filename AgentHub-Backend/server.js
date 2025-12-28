@@ -955,22 +955,33 @@ ${fromCurrency} → ${toCurrency}
           if (!recipes.length) {
             aiResponse = `"${query}" için tarif bulunamadı.`;
           } else {
-            let recipeList = `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
+            // ÖZET: Sadece tarif listesi (Ad, Süre, Porsiyon)
+            let summary = `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
+            recipes.forEach((recipe, index) => {
+              const title = recipe.title;
+              const readyInMinutes = recipe.readyInMinutes || 'N/A';
+              const servings = recipe.servings || 'N/A';
+              summary += `**${index + 1}. ${title}**\n⏱️ ${readyInMinutes} dk • 👥 ${servings} kişilik\n\n`;
+            });
+
+            // DETAY: Tüm liste (Görselli ve açıklamalı)
+            let detail = `🍳 **"${query}" için ${recipes.length} tarif:**\n\n`;
             recipes.forEach((recipe, index) => {
               const title = recipe.title;
               const readyInMinutes = recipe.readyInMinutes || 'N/A';
               const servings = recipe.servings || 'N/A';
               const image = recipe.image || '';
-              const summary = recipe.summary?.replace(/<[^>]*>/g, '') || 'Açıklama yok';
-              recipeList += `**${index + 1}. ${title}**\n`;
-              recipeList += `⏱️ ${readyInMinutes} dk • 👥 ${servings} kişilik\n`;
-              recipeList += `📝 ${summary}\n`;
+              const summaryText = recipe.summary?.replace(/<[^>]*>/g, '') || 'Açıklama yok';
+
+              detail += `**${index + 1}. ${title}**\n`;
+              detail += `⏱️ ${readyInMinutes} dk • 👥 ${servings} kişilik\n`;
+              detail += `📝 ${summaryText}\n`;
               if (image) {
-                recipeList += `![${title}](${image})\n`;
+                detail += `![${title}](${image})\n`;
               }
-              recipeList += `\n`;
+              detail += `\n`;
             });
-            aiResponse = recipeList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Tarif sonuçları döndürüldü');
         } catch (recipeError) {
