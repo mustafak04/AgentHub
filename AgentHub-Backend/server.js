@@ -1368,9 +1368,37 @@ Yanıtı JSON formatında ver:
       // Input placeholder'larını çöz
       let taskInput = step.input;
 
+      // JSON object ise JSON string'e çevir (news agent için)
+      if (typeof taskInput === 'object' && !Array.isArray(taskInput) && taskInput !== null) {
+        taskInput = JSON.stringify(taskInput);
+        console.log(`📦 Object input JSON string'e çevrildi: ${taskInput}`);
+      }
+
       // {{PREVIOUS_OUTPUT}} formatı
       if (taskInput === '{{PREVIOUS_OUTPUT}}' && previousOutput) {
         taskInput = previousOutput;
+      }
+      // {{PREVIOUS_OUTPUT.property}} veya {{PREVIOUS_OUTPUT.array[0].property}} formatı
+      else if (typeof taskInput === 'string' && taskInput.includes('{{PREVIOUS_OUTPUT')) {
+        const propertyMatch = taskInput.match(/\{\{PREVIOUS_OUTPUT([\.\[\]a-zA-Z0-9_]+)\}\}/);
+        if (propertyMatch && previousOutput) {
+          try {
+            // previousOutput'u JSON parse et
+            const outputObj = typeof previousOutput === 'string' ? JSON.parse(previousOutput) : previousOutput;
+            const propertyPath = propertyMatch[1];
+
+            // Property path'i eval ile çöz (örn: .articles[0].url)
+            const value = eval(`outputObj${propertyPath}`);
+            taskInput = value || taskInput;
+            console.log(`🔄 Nested placeholder çözüldü: ${propertyMatch[0]} -> ${taskInput}`);
+          } catch (err) {
+            console.warn(`⚠️ Nested placeholder çözümlenemedi:`, err.message);
+          }
+        }
+        // Basit {{PREVIOUS_OUTPUT}} replacement
+        else if (taskInput.includes('{{PREVIOUS_OUTPUT}}') && previousOutput) {
+          taskInput = taskInput.replace(/\{\{PREVIOUS_OUTPUT\}\}/g, previousOutput);
+        }
       }
       // {{STEP_X_OUTPUT}} veya {{PREVIOUS_OUTPUT_OF_STEP_X}} veya {{PREVIOUS_OUTPUT_FROM_STEP_X}} formatı
       else if (typeof taskInput === 'string' && taskInput.includes('{{')) {
@@ -1383,15 +1411,11 @@ Yanıtı JSON formatında ver:
             console.log(`🔄 Placeholder çözüldü: Step ${stepIndex + 1} -> ${taskInput.substring(0, 50)}...`);
           }
         }
-        // {{PREVIOUS_OUTPUT}} yazılı string içinde
-        else if (taskInput.includes('{{PREVIOUS_OUTPUT}}') && previousOutput) {
-          taskInput = taskInput.replace(/\{\{PREVIOUS_OUTPUT\}\}/g, previousOutput);
-        }
       }
-      // Array ise (randomChoice gibi)
+      // Array ise (randomChoice gibi) - JSON string'e çevir
       else if (Array.isArray(taskInput)) {
-        // Array olarak bırak
-        taskInput = taskInput;
+        taskInput = JSON.stringify(taskInput);
+        console.log(`📦 Array input JSON string'e çevrildi: ${taskInput}`);
       }
 
       // Agent ID'sini bul
