@@ -1148,54 +1148,69 @@ ${fromCurrency} → ${toCurrency}
         const teamName = match[1].trim();
         console.log(`⚽ Futbol: ${teamName}`);
         try {
-          const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY;
-          if (!FOOTBALL_API_KEY) throw new Error('FOOTBALL_API_KEY tanımlı değil');
-          // Takım ara
-          const searchResponse = await axios.get('https://v3.football.api-sports.io/teams', {
-            params: { search: teamName },
-            headers: { 'x-apisports-key': FOOTBALL_API_KEY }
-          });
-          const teams = searchResponse.data.response;
-          if (!teams.length) {
-            aiResponse = `"${teamName}" takımı bulunamadı.`;
+          const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY;
+          if (!FOOTBALL_DATA_API_KEY) throw new Error('FOOTBALL_DATA_API_KEY tanımlı değil');
+
+          // Takım ara (football-data.org - competition bazlı)
+          // Premier League: 2021, La Liga: 2014, Serie A: 2019, Bundesliga: 2002
+          const competitions = [2021, 2014, 2019, 2002]; // Premier, La Liga, Serie A, Bundesliga
+
+          let foundTeam = null;
+          let teamMatches = null;
+
+          // Her ligde takımı ara
+          for (const compId of competitions) {
+            try {
+              const teamsResponse = await axios.get(`https://api.football-data.org/v4/competitions/${compId}/teams`, {
+                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+              });
+
+              const teams = teamsResponse.data.teams || [];
+              foundTeam = teams.find(t =>
+                t.name.toLowerCase().includes(teamName.toLowerCase()) ||
+                t.shortName.toLowerCase().includes(teamName.toLowerCase())
+              );
+
+              if (foundTeam) {
+                console.log(`✅ Takım bulundu: ${foundTeam.name}`);
+
+                // Takımın son maçlarını al
+                const matchesResponse = await axios.get(`https://api.football-data.org/v4/teams/${foundTeam.id}/matches`, {
+                  params: { status: 'FINISHED', limit: 5 },
+                  headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+                });
+
+                teamMatches = matchesResponse.data.matches || [];
+                break; // Bulunca döngüden çık
+              }
+            } catch (err) {
+              console.warn(`⚠️ Competition ${compId} hatası:`, err.message);
+            }
+          }
+
+          if (!foundTeam || !teamMatches || teamMatches.length === 0) {
+            aiResponse = `"${teamName}" takımı bulunamadı veya son maçları yok.`;
           } else {
-            const teamId = teams[0].team.id;
-            const teamFullName = teams[0].team.name;
-            // Son 30 günün maçları
-            const today = new Date();
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(today.getDate() - 30);
+            const summary = `⚽ **${foundTeam.name} - Son ${teamMatches.length} Maç**\n\n`;
 
-            const fixturesResponse = await axios.get('https://v3.football.api-sports.io/fixtures', {
-              params: {
-                team: teamId,
-                from: thirtyDaysAgo.toISOString().split('T')[0],
-                to: today.toISOString().split('T')[0]
-              },
-              headers: { 'x-apisports-key': FOOTBALL_API_KEY }
+            let detail = `⚽ **${foundTeam.name} - Son Maçlar:**\n\n`;
+            teamMatches.slice(0, 5).forEach((fixture, i) => {
+              const homeTeam = fixture.homeTeam.name;
+              const awayTeam = fixture.awayTeam.name;
+              const homeScore = fixture.score.fullTime.home;
+              const awayScore = fixture.score.fullTime.away;
+              const date = new Date(fixture.utcDate).toLocaleDateString('tr-TR');
+
+              detail += `**${i + 1}. ${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}**\n`;
+              detail += `📅 ${date}\n\n`;
             });
 
-            const allFixtures = fixturesResponse.data.response;
-            // Son 3 maçı al (bitmiş olanlar)
-            const fixtures = allFixtures.filter(f => f.fixture.status.short === 'FT').slice(-3).reverse();
-            // DEBUG: API yanıtını kontrol et
-            console.log('📡 Fixtures Response:', JSON.stringify(fixturesResponse.data).substring(0, 500));
-            console.log('📊 Fixtures count:', fixtures.length);
-            aiResponse = `⚽ **${teamFullName} - Son Maçlar:**\n\n`;
-            fixtures.forEach((fixture, i) => {
-              const homeTeam = fixture.teams.home.name;
-              const awayTeam = fixture.teams.away.name;
-              const homeScore = fixture.goals.home;
-              const awayScore = fixture.goals.away;
-              const status = fixture.fixture.status.short;
-              aiResponse += `**${i + 1}. ${homeTeam} ${homeScore} - ${awayScore} ${awayTeam}**\n`;
-              aiResponse += `📅 ${fixture.fixture.date.split('T')[0]} | ${status}\n\n`;
-            });
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Futbol skorları alındı');
         } catch (footballError) {
-          console.error('❌ API-Football hatası:', footballError.message);
-          aiResponse = 'Üzgünüm, futbol skorları alınamadı.';
+          console.error('❌ Football-Data API hatası:', footballError.message);
+          aiResponse = 'Üzgünüm, futbol skorları alınamadı. API limiti dolmuş olabilir (günlük 10 istek).';
         }
       }
     }
