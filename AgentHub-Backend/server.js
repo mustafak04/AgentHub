@@ -14,89 +14,39 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Gemini istemcileri oluştur (5 adet)
-const genAI_1 = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_1);
-const genAI_2 = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_2);
-const genAI_3 = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_3);
-const genAI_4 = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_4);
-const genAI_5 = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_5);
+// Gemini istemcisi oluştur (Primary)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Gemini istemcisi oluştur (Backup)
+const genAI_Backup = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_BACKUP);
 
-// ============ GEMINI 5-KEY API HELPER (Beş API Key Fallback) ============
+// ============ GEMINI DUAL API HELPER (İki API Key Fallback) ============
 async function generateAIResponse(systemMessage, userMessage) {
   try {
-    console.log('🤖 Gemini API (Key 1) çağrısı yapılıyor...');
-    const model = genAI_1.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    console.log('🤖 Gemini API (Primary) çağrısı yapılıyor...');
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
     const result = await model.generateContent(prompt);
     const aiResponse = result.response.text();
-    console.log(`✅ Gemini cevabı (Key 1): ${aiResponse.substring(0, 100)}...`);
+    console.log(`✅ Gemini cevabı (Primary): ${aiResponse.substring(0, 100)}...`);
     return aiResponse;
   } catch (error) {
-    // Rate limit veya başka hata durumunda Key 2'ye geç
+    // Rate limit veya başka hata durumunda backup key kullan
     if (error.message && (error.message.includes('429') || error.message.includes('quota') || error.message.includes('Too Many Requests'))) {
-      console.warn('⚠️ Key 1 rate limit, Key 2 kullanılıyor...');
+      console.warn('⚠️ Primary API rate limit, Backup API key kullanılıyor...');
     } else {
-      console.warn('⚠️ Key 1 hatası, Key 2 deneniyor...');
+      console.warn('⚠️ Primary API hatası, Backup API key deneniyor...');
     }
 
     try {
-      const model2 = genAI_2.getGenerativeModel({ model: 'gemini-2.5-flash' });
-      const prompt2 = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-      const result2 = await model2.generateContent(prompt2);
-      const aiResponse2 = result2.response.text();
-      console.log(`✅ Gemini cevabı (Key 2): ${aiResponse2.substring(0, 100)}...`);
-      return aiResponse2;
-    } catch (error2) {
-      // Key 3'e geç
-      if (error2.message && (error2.message.includes('429') || error2.message.includes('quota') || error2.message.includes('Too Many Requests'))) {
-        console.warn('⚠️ Key 2 rate limit, Key 3 kullanılıyor...');
-      } else {
-        console.warn('⚠️ Key 2 hatası, Key 3 deneniyor...');
-      }
-
-      try {
-        const model3 = genAI_3.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        const prompt3 = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-        const result3 = await model3.generateContent(prompt3);
-        const aiResponse3 = result3.response.text();
-        console.log(`✅ Gemini cevabı (Key 3): ${aiResponse3.substring(0, 100)}...`);
-        return aiResponse3;
-      } catch (error3) {
-        // Key 4'e geç
-        if (error3.message && (error3.message.includes('429') || error3.message.includes('quota') || error3.message.includes('Too Many Requests'))) {
-          console.warn('⚠️ Key 3 rate limit, Key 4 kullanılıyor...');
-        } else {
-          console.warn('⚠️ Key 3 hatası, Key 4 deneniyor...');
-        }
-
-        try {
-          const model4 = genAI_4.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const prompt4 = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-          const result4 = await model4.generateContent(prompt4);
-          const aiResponse4 = result4.response.text();
-          console.log(`✅ Gemini cevabı (Key 4): ${aiResponse4.substring(0, 100)}...`);
-          return aiResponse4;
-        } catch (error4) {
-          // Key 5'e geç (son deneme)
-          if (error4.message && (error4.message.includes('429') || error4.message.includes('quota') || error4.message.includes('Too Many Requests'))) {
-            console.warn('⚠️ Key 4 rate limit, Key 5 kullanılıyor (son deneme)...');
-          } else {
-            console.warn('⚠️ Key 4 hatası, Key 5 deneniyor (son deneme)...');
-          }
-
-          try {
-            const model5 = genAI_5.getGenerativeModel({ model: 'gemini-2.5-flash' });
-            const prompt5 = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
-            const result5 = await model5.generateContent(prompt5);
-            const aiResponse5 = result5.response.text();
-            console.log(`✅ Gemini cevabı (Key 5): ${aiResponse5.substring(0, 100)}...`);
-            return aiResponse5;
-          } catch (error5) {
-            console.error('❌ Tüm 5 Gemini API key de başarısız:', error5.message);
-            throw new Error('Tüm API anahtarları başarısız oldu.');
-          }
-        }
-      }
+      const backupModel = genAI_Backup.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const backupPrompt = `${systemMessage}\n\nKullanıcı: ${userMessage}`;
+      const backupResult = await backupModel.generateContent(backupPrompt);
+      const backupResponse = backupResult.response.text();
+      console.log(`✅ Gemini cevabı (Backup): ${backupResponse.substring(0, 100)}...`);
+      return backupResponse;
+    } catch (backupError) {
+      console.error('❌ Her iki Gemini API de başarısız:', backupError.message);
+      throw new Error('Her iki Gemini API key de başarısız oldu.');
     }
   }
 }
