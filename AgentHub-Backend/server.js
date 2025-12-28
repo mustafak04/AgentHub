@@ -670,10 +670,12 @@ ${fromCurrency} → ${toCurrency}
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
             const results = response.data.Search.slice(0, 5);
-            let movieList = `<OZET>🎬 "${query}" için ${results.length} sonuç</OZET>\n\n`;
+            let movieList = `🎬 "${query}" için ${results.length} sonuç\n\n`;
             movieList += `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
 
+            let index = 0;
             for (const item of results) {
+              index++;
               // Her film için detaylı bilgi al
               const detailRes = await axios.get('http://www.omdbapi.com/', {
                 params: {
@@ -691,7 +693,7 @@ ${fromCurrency} → ${toCurrency}
               const plot = detail.Plot !== 'N/A' ? detail.Plot : 'Açıklama yok';
               const poster = detail.Poster !== 'N/A' ? detail.Poster : '';
 
-              movieList += `**${title}** (${year})\n`;
+              movieList += `**${index}. ${title}** (${year})\n`;
               movieList += `${type} • ⭐ ${rating}/10\n`;
               movieList += `📝 ${plot}\n`;
               if (poster) {
