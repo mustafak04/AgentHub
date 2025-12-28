@@ -1004,6 +1004,20 @@ ${fromCurrency} → ${toCurrency}
         aiResponse = `${summary}\n\n---\n\n${aiResponse}`;
       }
     }
+    // ============ MOTIVASYON AGENT (agentId === '19') ============
+    if (agentId === '19') {
+      // İlk paragrafı (giriş cümlesi) al
+      const firstParagraph = aiResponse.split('\n').find(line => line.trim().length > 0) || '';
+
+      // İlk başlığı bul
+      const firstHeaderMatch = aiResponse.match(/\*\*(.*?)\*\*/);
+      const firstHeader = firstHeaderMatch ? `\n\n**${firstHeaderMatch[1]}**` : '';
+
+      const summary = `🌟 **Motivasyon:**\n\n${firstParagraph}${firstHeader}...`;
+
+      // Detay zaten aiResponse'un kendisi
+      aiResponse = `${summary}\n\n---\n\n${aiResponse}`;
+    }
     // ============ QR KOD AGENT (agentId === '20') ============
     if (agentId === '20' && aiResponse.includes('[QR:')) {
       const match = aiResponse.match(/\[QR:(.*?)\]/);
