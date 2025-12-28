@@ -241,7 +241,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           const description = wikiData.description ? `(${wikiData.description})` : '';
           const extract = wikiData.extract;
           const link = wikiData.content_urls && wikiData.content_urls.desktop ? wikiData.content_urls.desktop.page : '';
-          const formattedLink = link ? `\n🔗 [Link](${link})` : '';
+          const formattedLink = link ? `\n🔗 [Wikipedia](${link})` : '';
 
           // ÖZET: Başlık + Açıklama + Link
           const summary = `📚 ${title} ${description}${formattedLink}`.trim();
