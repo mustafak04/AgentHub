@@ -1051,14 +1051,18 @@ ${fromCurrency} → ${toCurrency}
           if (data.error) {
             aiResponse = `IP bilgisi alınamadı: ${data.reason}`;
           } else {
-            aiResponse = `🌍 **IP Bilgisi:**\n\n`;
-            aiResponse += `📍 IP: ${data.ip}\n`;
-            aiResponse += `🏙️ Şehir: ${data.city || 'Bilinmiyor'}\n`;
-            aiResponse += `🗺️ Bölge: ${data.region || 'Bilinmiyor'}\n`;
-            aiResponse += `🌐 Ülke: ${data.country_name || 'Bilinmiyor'} (${data.country || ''})\n`;
-            aiResponse += `🧭 Koordinat: ${data.latitude}, ${data.longitude}\n`;
-            aiResponse += `🌐 ISP: ${data.org || 'Bilinmiyor'}\n`;
-            aiResponse += `⏰ Zaman Dilimi: ${data.timezone || 'Bilinmiyor'}`;
+            const summary = `🌍 **IP Bilgisi:**\n\n📍 IP: ${data.ip}\n🌐 Ülke: ${data.country_name || 'Bilinmiyor'} (${data.country || ''})\n🌐 ISP: ${data.org || 'Bilinmiyor'}`;
+
+            let detail = `🌍 **IP Bilgisi:**\n\n`;
+            detail += `📍 IP: ${data.ip}\n`;
+            detail += `🏙️ Şehir: ${data.city || 'Bilinmiyor'}\n`;
+            detail += `🗺️ Bölge: ${data.region || 'Bilinmiyor'}\n`;
+            detail += `🌐 Ülke: ${data.country_name || 'Bilinmiyor'} (${data.country || ''})\n`;
+            detail += `🧭 Koordinat: ${data.latitude}, ${data.longitude}\n`;
+            detail += `🌐 ISP: ${data.org || 'Bilinmiyor'}\n`;
+            detail += `⏰ Zaman Dilimi: ${data.timezone || 'Bilinmiyor'}`;
+
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ IP bilgisi alındı');
         } catch (ipError) {
