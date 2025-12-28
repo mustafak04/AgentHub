@@ -893,7 +893,22 @@ ${fromCurrency} → ${toCurrency}
           if (!games.length) {
             aiResponse = `"${query}" için oyun bulunamadı.`;
           } else {
-            let gameList = `🎮 **"${query}" için ${games.length} oyun:**\n\n`;
+            // ÖZET: Sadece ilk oyun (Görselli)
+            const firstGame = games[0];
+            const fTitle = firstGame.name;
+            const fRating = firstGame.rating ? firstGame.rating.toFixed(1) : 'N/A';
+            const fReleased = firstGame.released || 'Bilinmiyor';
+            const fPlatforms = firstGame.platforms?.map(p => p.platform.name).slice(0, 3).join(', ') || 'N/A';
+            const fGenres = firstGame.genres?.map(g => g.name).slice(0, 2).join(', ') || 'N/A';
+            const fScreenshot = firstGame.background_image || '';
+
+            let summary = `🎮 **"${query}" için ${games.length} oyun:**\n\n**1. ${fTitle}**\n⭐ ${fRating}/5 • 📅 ${fReleased}\n🎮 ${fPlatforms}\n🏷️ ${fGenres}\n`;
+            if (fScreenshot) {
+              summary += `![${fTitle}](${fScreenshot})\n`;
+            }
+
+            // DETAY: Tüm liste
+            let detail = `🎮 **"${query}" için ${games.length} oyun:**\n\n`;
             games.forEach((game, index) => {
               const title = game.name;
               const rating = game.rating ? game.rating.toFixed(1) : 'N/A';
@@ -901,16 +916,16 @@ ${fromCurrency} → ${toCurrency}
               const platforms = game.platforms?.map(p => p.platform.name).slice(0, 3).join(', ') || 'N/A';
               const genres = game.genres?.map(g => g.name).slice(0, 2).join(', ') || 'N/A';
               const screenshot = game.background_image || '';
-              gameList += `**${index + 1}. ${title}**\n`;
-              gameList += `⭐ ${rating}/5 • 📅 ${released}\n`;
-              gameList += `🎮 ${platforms}\n`;
-              gameList += `🏷️ ${genres}\n`;
+              detail += `**${index + 1}. ${title}**\n`;
+              detail += `⭐ ${rating}/5 • 📅 ${released}\n`;
+              detail += `🎮 ${platforms}\n`;
+              detail += `🏷️ ${genres}\n`;
               if (screenshot) {
-                gameList += `![${title}](${screenshot})\n`;
+                detail += `![${title}](${screenshot})\n`;
               }
-              gameList += `\n`;
+              detail += `\n`;
             });
-            aiResponse = gameList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Oyun sonuçları döndürüldü');
         } catch (gameError) {
