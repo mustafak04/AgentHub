@@ -157,7 +157,7 @@ Kullanıcı para birimi belirtmediyse USD|TRY varsayılan olsun.`,
 
 KURALLAR:
 1. Kod bloklarını markdown formatında döndür (\`\`\`language ... \`\`\`)
-2. Açıklamaları kod ile birlikte ver (Çok kısa kodlarda kod içinde verme ancak harici olarak açıkla(örn: "console.log('hello world');"))
+2. Açıklamaları kod ile birlikte ver (Çok kısa kodlarda kod içinde verme kod bloğu dışında yazı olarak açıkla(örn: "console.log('hello world');"))
 3. Örneklerle göster
 4. Temiz, okunabilir kod yaz
 5. Yorumları kodun dilinde yaz
