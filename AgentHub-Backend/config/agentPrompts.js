@@ -44,7 +44,7 @@ const agentPrompts = {
     Adım Adım Çözüm:  
     Alan = kenar × kenar  
     Alan = 5 × 5 = 25 metrekare
-    Sonuç: 25 metrekare  
+    Sonuç: 25 metrekare
   - "Bir mal 200 TL, %20 indirim uygulanırsa kaça düşer?"  
     Adım Adım Çözüm:  
     İndirimli fiyat = 200 - (200 × 0,20) = 160 TL

@@ -100,6 +100,20 @@ async function processAgentRequest(agentId, agentName, userMessage) {
     if (agentId === '2') {
       console.log('✅ Hesap makinesi agentı yanıtı oluşturuldu.');
       // Gemini zaten hesaplama yaptı, aiResponse kullan
+
+      // Özet ve detay ayrımı yap
+      // Prompt formatı: "Adım Adım Çözüm: ... Sonuç: ..." veya sadece "Sonuç: ..."
+
+      const resultMatch = aiResponse.match(/Sonuç:\s*(.*)/i);
+      const stepsMatch = aiResponse.match(/Adım Adım Çözüm:([\s\S]*?)Sonuç:/i);
+
+      if (resultMatch && stepsMatch) {
+        const resultText = `Sonuç: ${resultMatch[1].trim()}`;
+        const stepsText = `Adım Adım Çözüm:\n${stepsMatch[1].trim()}\n\n${resultText}`;
+
+        aiResponse = `${resultText}\n\n---\n\n${stepsText}`;
+      }
+      // Eğer sadece sonuç varsa veya format farklıysa olduğu gibi kalsın
     }
     // ============ ÇEVİRİ AGENT (agentId === '3') ============
     if (agentId === '3' && aiResponse.includes('[TRANSLATE:')) {
