@@ -560,9 +560,16 @@ ${fromCurrency} → ${toCurrency}
 
               const summaryModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
               const summaryResult = await summaryModel.generateContent(summaryPrompt);
-              const summary = summaryResult.response.text();
+              const fullSummary = summaryResult.response.text();
 
-              aiResponse = `📝 **Özet:**\n\n${summary}\n\n🔗 Kaynak: ${url}`;
+              // İlk cümleyi bul (Nokta ile biten ilk kısım)
+              const firstSentenceMatch = fullSummary.match(/.*?[.!?]/);
+              const firstSentence = firstSentenceMatch ? firstSentenceMatch[0] : fullSummary.substring(0, 100) + '...';
+
+              const summaryPart = `📝 **Özet:** ${firstSentence}\n\n[🔗 Kaynak](${url})`;
+              const detailPart = `📝 **Özet:**\n\n${fullSummary}\n\n[🔗 Kaynak](${url})`;
+
+              aiResponse = `${summaryPart}\n\n---\n\n${detailPart}`;
             }
 
             console.log('✅ URL özeti oluşturuldu');
