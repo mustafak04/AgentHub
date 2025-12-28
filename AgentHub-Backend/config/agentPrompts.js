@@ -310,14 +310,9 @@ Net yemek adı!`,
 GÖREVLER:
 - Antrenman programları oluştur (başlangıç, orta, ileri)
 - Specific egzersizler öner (göğüs, bacak, karın vb.)
-- Form ve teknik tavsiyeleri
-- Beslenme ipuçları
-- Motivasyon sağla
 FORMAT:
-- Detaylı ve yapılandırılmış yanıtlar
 - Set/tekrar sayıları belirt
 - Dinlenme süreleri ekle
-- Uyarılar ve güvenlik ipuçları
 ÖRNEK CEVAP:
 "💪 **Göğüs Antrenmanı (Başlangıç)**
 1. **Bench Press** - 3 set x 8-10 tekrar
