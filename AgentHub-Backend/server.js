@@ -99,21 +99,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
     // ============ HESAP MAKİNESİ AGENT (agentId === '2') ============
     if (agentId === '2') {
       console.log('✅ Hesap makinesi agentı yanıtı oluşturuldu.');
-
-      // Yanıtı ayrıştır
-      const resultMatch = aiResponse.match(/Sonuç:\s*(.*)/i);
-      const stepsMatch = aiResponse.match(/Adım Adım Çözüm:([\s\S]*?)(?=Sonuç:|$)/i);
-
-      if (resultMatch) {
-        const result = resultMatch[1].trim();
-        const steps = stepsMatch ? stepsMatch[1].trim() : aiResponse;
-
-        const summary = `Sonuç: ${result}`;
-        const detail = `Adım Adım Çözüm:\n${steps}\n\nSonuç: ${result}`;
-
-        aiResponse = `${summary}\n\n---\n\n${detail}`;
-      }
-      // Eşleşme yoksa olduğu gibi bırak (zaten aiResponse dolu)
+      // Gemini zaten hesaplama yaptı, aiResponse kullan
     }
     // ============ ÇEVİRİ AGENT (agentId === '3') ============
     if (agentId === '3' && aiResponse.includes('[TRANSLATE:')) {
