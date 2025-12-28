@@ -653,45 +653,57 @@ ${fromCurrency} → ${toCurrency}
         const query = match[1].trim();
         console.log(`🎬 Film/Dizi: ${query}`);
         try {
-          const TMDB_API_KEY = process.env.TMDB_API_KEY;
-          if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY tanımlı değil');
-          const response = await axios.get('https://api.themoviedb.org/3/search/multi', {
+          const OMDB_API_KEY = process.env.OMDB_API_KEY;
+          if (!OMDB_API_KEY) throw new Error('OMDB_API_KEY tanımlı değil');
+
+          // OMDB API ile arama yap
+          const response = await axios.get('http://www.omdbapi.com/', {
             params: {
-              api_key: TMDB_API_KEY,
-              query: query,
-              language: 'tr-TR',
+              apikey: OMDB_API_KEY,
+              s: query,
+              type: '', // hem film hem dizi
               page: 1
             }
           });
-          const results = response.data.results.slice(0, 5);
-          if (!results.length) {
+
+          if (response.data.Response === 'False') {
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
-            let movieList = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
-            results.forEach((item, index) => {
-              const title = item.title || item.name;
-              const type = item.media_type === 'movie' ? '🎥 Film' : '📺 Dizi';
-              const year = (item.release_date || item.first_air_date || '').split('-')[0];
-              const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-              const overview = item.overview
-                ? item.overview.substring(0, 150) + '...'
-                : 'Açıklama yok';
-              const poster = item.poster_path
-                ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-                : '';
-              movieList += `**${index + 1}. ${title}** (${year})\n`;
+            const results = response.data.Search.slice(0, 5);
+            let movieList = `<OZET>🎬 "${query}" için ${results.length} sonuç</OZET>\n\n`;
+            movieList += `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
+
+            for (const item of results) {
+              // Her film için detaylı bilgi al
+              const detailRes = await axios.get('http://www.omdbapi.com/', {
+                params: {
+                  apikey: OMDB_API_KEY,
+                  i: item.imdbID,
+                  plot: 'short'
+                }
+              });
+              const detail = detailRes.data;
+
+              const title = detail.Title;
+              const type = detail.Type === 'movie' ? '🎥 Film' : '📺 Dizi';
+              const year = detail.Year;
+              const rating = detail.imdbRating !== 'N/A' ? detail.imdbRating : 'N/A';
+              const plot = detail.Plot !== 'N/A' ? detail.Plot : 'Açıklama yok';
+              const poster = detail.Poster !== 'N/A' ? detail.Poster : '';
+
+              movieList += `**${title}** (${year})\n`;
               movieList += `${type} • ⭐ ${rating}/10\n`;
-              movieList += `📝 ${overview}\n`;
+              movieList += `📝 ${plot}\n`;
               if (poster) {
                 movieList += `![${title}](${poster})\n`;
               }
               movieList += `\n`;
-            });
+            }
             aiResponse = movieList;
           }
           console.log('✅ Film/Dizi sonuçları döndürüldü');
-        } catch (tmdbError) {
-          console.error('❌ TMDB API hatası:', tmdbError.message);
+        } catch (omdbError) {
+          console.error('❌ OMDB API hatası:', omdbError.message);
           aiResponse = 'Üzgünüm, film/dizi araması yapılamadı.';
         }
       }
