@@ -237,12 +237,19 @@ async function processAgentRequest(agentId, agentName, userMessage) {
               'Accept': 'application/json'
             }
           });
-          let wikiResponse = `📚 ${wikiData.title}\n`;
-          if (wikiData.description) wikiResponse += `(${wikiData.description})\n\n`;
-          wikiResponse += `${wikiData.extract}\n`;
-          if (wikiData.content_urls && wikiData.content_urls.desktop)
-            wikiResponse += `\n🔗 ${wikiData.content_urls.desktop.page}`;
-          aiResponse = wikiResponse;
+          const title = wikiData.title;
+          const description = wikiData.description ? `(${wikiData.description})` : '';
+          const extract = wikiData.extract;
+          const link = wikiData.content_urls && wikiData.content_urls.desktop ? wikiData.content_urls.desktop.page : '';
+          const formattedLink = link ? `\n🔗 [Link](${link})` : '';
+
+          // ÖZET: Başlık + Açıklama + Link
+          const summary = `📚 ${title} ${description}${formattedLink}`.trim();
+
+          // DETAY: Başlık + Açıklama + Uzun Metin + Link
+          const detail = `📚 ${title} ${description}\n${extract}${formattedLink}`.trim();
+
+          aiResponse = `${summary}\n\n---\n\n${detail}`;
           console.log('✅ Wikipedia özeti döndürüldü');
         } catch (err) {
           aiResponse = lang === 'tr'
