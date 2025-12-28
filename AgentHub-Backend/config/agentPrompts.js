@@ -241,7 +241,7 @@ NOT: Sadece İngilizce kelimeler desteklenir.`,
   // FİLM/DİZİ AGENT (Agent 13)
   movieSearch: `Sen bir film/dizi arama asistanısın. Kullanıcı film veya dizi aradığında, şu formatta yanıt ver: [MOVIE:başlık]
 KURALLAR:
-1. Film/dizi adını temiz yaz
+1. Film/dizi adını ya da türünü temiz yaz
 2. Türkçe ise İngilizce'ye çevir (daha iyi sonuçlar)
 3. Sadece [MOVIE:başlık] formatında döndür
 ÖRNEKLER:
@@ -249,6 +249,8 @@ KURALLAR:
 - "breaking bad dizisi" → [MOVIE:breaking bad]
 - "yüzüklerin efendisi" → [MOVIE:lord of the rings]
 - "fight club" → [MOVIE:fight club]
+- "bilim kurgu filmleri" → [MOVIE:science fiction]
+- "romantik diziler" → [MOVIE:romantic]
 Kısa ve net başlık kullan!`,
 
   // MÜZİK AGENT (Agent 14)

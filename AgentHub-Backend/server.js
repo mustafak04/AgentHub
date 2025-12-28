@@ -670,9 +670,7 @@ ${fromCurrency} → ${toCurrency}
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
             const results = response.data.Search.slice(0, 5);
-            let movieList = `🎬 "${query}" için ${results.length} sonuç\n\n`;
-            movieList += `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
-
+            let movieList = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
             let index = 0;
             for (const item of results) {
               index++;
