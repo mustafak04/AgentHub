@@ -761,33 +761,47 @@ ${fromCurrency} → ${toCurrency}
           if (!artists.length && !tracks.length) {
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
-            let musicList = `🎵 **"${query}" için sonuçlar:**\n\n`;
+            // ÖZET: İlk sanatçı ve ilk şarkı (Görselsiz)
+            let summary = `🎵 **"${query}" için sonuçlar:**\n\n`;
+            if (artists.length) {
+              const firstArtist = artists[0];
+              const listeners = formatNumber(firstArtist.listeners || '0');
+              summary += `**🎤 Sanatçı:** ${firstArtist.name} (👥 ${listeners})\n`;
+            }
+            if (tracks.length) {
+              const firstTrack = tracks[0];
+              const listeners = formatNumber(firstTrack.listeners || '0');
+              summary += `**🎧 Şarkı:** ${firstTrack.name} - ${firstTrack.artist} (👥 ${listeners})\n`;
+            }
+
+            // DETAY: Tüm liste (Görselli)
+            let detail = `🎵 **"${query}" için sonuçlar:**\n\n`;
             // Sanatçılar
             if (artists.length) {
-              musicList += `**🎤 Sanatçılar:**\n`;
+              detail += `**🎤 Sanatçılar:**\n`;
               artists.slice(0, 3).forEach((artist, i) => {
                 const listeners = formatNumber(artist.listeners || '0');
-                musicList += `${i + 1}. **${artist.name}**\n`;
-                musicList += `   👥 ${listeners} dinleyici\n`;
+                detail += `${i + 1}. **${artist.name}**\n`;
+                detail += `   👥 ${listeners} dinleyici\n`;
                 if (artist.image?.[2]?.['#text']) {
-                  musicList += `   ![${artist.name}](${artist.image[2]['#text']})\n`;
+                  detail += `   ![${artist.name}](${artist.image[2]['#text']})\n`;
                 }
               });
-              musicList += `\n`;
+              detail += `\n`;
             }
             // Şarkılar
             if (tracks.length) {
-              musicList += `**🎧 Şarkılar:**\n`;
+              detail += `**🎧 Şarkılar:**\n`;
               tracks.slice(0, 3).forEach((track, i) => {
                 const listeners = formatNumber(track.listeners || '0');
-                musicList += `${i + 1}. **${track.name}** - ${track.artist}\n`;
-                musicList += `   👥 ${listeners} dinleyici\n`;
+                detail += `${i + 1}. **${track.name}** - ${track.artist}\n`;
+                detail += `   👥 ${listeners} dinleyici\n`;
                 if (track.image?.[2]?.['#text']) {
-                  musicList += `   ![${track.name}](${track.image[2]['#text']})\n`;
+                  detail += `   ![${track.name}](${track.image[2]['#text']})\n`;
                 }
               });
             }
-            aiResponse = musicList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Müzik sonuçları döndürüldü');
         } catch (musicError) {
