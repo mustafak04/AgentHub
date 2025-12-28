@@ -171,15 +171,32 @@ async function processAgentRequest(agentId, agentName, userMessage) {
             ).join(',\n');
             const formatPrompt = `
           Kullanıcıya haber kartlarını aşağıdaki veriyle sunmalısın. Yanıtı, kullanıcının mesajındaki dilde (code: ${language}) üret.
-          Her haber için;
-          
-          - 'Kaynak:', 'Tarih:', 'Haber linki:', gibi sabit etiket ve kelimeleri cevabın diline çevir.
-          - Tarihi, kullanıcının dilinde doğal biçimde yaz (örneğin, İngilizce için: October 26, 2025; Almanca için: 26. Oktober 2025; Türkçe için: 26 Ekim 2025).
-          - Tüm haber detaylarını aktar, isimleri, açıklamaları, linkleri ve siteleri aynen göster; gereksiz özet veya genelleme yapma.
-          - Her kartta başlığı, açıklamayı, kaynağı, tarihi ve linki başında emojiyle sun (örn: 📰 1. ...).
-          - Sonuçta kartları en doğal ve anlaşılır şekilde, mesajın dilinde gruplu ve okunaklı döndür.
-          - Asla Türkçe etiket kullanma, sadece kullanıcının mesajında algılanan dilde geri döndür.
-          - Gerekiyorsa tarih biçimini otomatik ayarla.
+
+          YANIT FORMATI:
+          Önce bir ÖZET listesi oluştur (açıklama olmadan), sonra "---" ayırıcı koy, sonra DETAYLI listeyi oluştur (açıklama ile).
+
+          1. ÖZET KISMI (Açıklama YOK):
+          Her haber için sadece:
+          📰 [Sıra]. [Başlık]
+          Kaynak: [Kaynak Adı] • Tarih: [Tarih]
+          🔗 [Link](URL)  <-- Linki mutlaka Markdown formatında yap!
+          (Araya boş satır koy)
+
+          ---
+
+          2. DETAYLI KISIM (Açıklama VAR):
+          Her haber için:
+          📰 [Sıra]. [Başlık]
+          📝 [Açıklama]
+          Kaynak: [Kaynak Adı] • Tarih: [Tarih]
+          🔗 [Link](URL) <-- Linki mutlaka Markdown formatında yap!
+          (Araya boş satır koy)
+
+          KURALLAR:
+          - Tarihi, kullanıcının dilinde doğal biçimde yaz (örn: 26 Ekim 2025).
+          - 'Kaynak', 'Tarih' gibi kelimeleri kullanıcının diline çevir.
+          - Linkleri mutlaka [Link](URL) şeklinde Markdown yap ki tıklanabilsin.
+          - İki kısım arasında mutlaka tek başına bir "---" satırı olsun.
           
           Veri Listesi:
           [${rawList}]
