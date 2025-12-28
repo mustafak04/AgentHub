@@ -47,6 +47,7 @@ export default function Chat() {
           const formatted = updatedMessages.map(msg => ({
             id: msg.id,
             text: msg.content,
+            fullText: msg.fullText,
             sender: msg.role === 'user' ? 'user' as const : 'agent' as const
           }));
           setMessages(formatted);
