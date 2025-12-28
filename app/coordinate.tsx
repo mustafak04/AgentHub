@@ -115,8 +115,8 @@ export default function Coordinate() {
         // Koordinatör başlığını çıkar
         const withoutHeader = fullResponse.replace(/🤝 \*\*Koordinatör Sonucu\*\*\n\n/, '');
 
-        // --- ile ayrılmış adımları ayır
-        const steps: string[] = withoutHeader.split('---').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+        // ===STEP_DELIMITER=== ile ayrılmış adımları ayır
+        const steps: string[] = withoutHeader.split('===STEP_DELIMITER===').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
 
         // Her adımı ayrı mesaj olarak kaydet (özet + detay)
         for (let i = 0; i < steps.length; i++) {
