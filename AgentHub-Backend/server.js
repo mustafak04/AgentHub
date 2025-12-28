@@ -313,6 +313,19 @@ ${fromCurrency} → ${toCurrency}
     if (agentId === '7') {
       // Gemini zaten kod asistanı olarak çalışacak
       console.log('✅ Kod asistanı yanıtı oluşturuldu.');
+
+      // Kod bloklarını ayıkla (```...```)
+      const codeBlockRegex = /```[\s\S]*?```/g;
+      const codeBlocks = aiResponse.match(codeBlockRegex);
+
+      if (codeBlocks && codeBlocks.length > 0) {
+        // Sadece kod bloklarını birleştir
+        const summary = codeBlocks.join('\n\n');
+        // Detay olarak tüm yanıtı ver
+        const detail = aiResponse;
+
+        aiResponse = `${summary}\n\n---\n\n${detail}`;
+      }
     }
     // ============ AI GÖRSEL OLUŞTURMA AGENT (agentId === '8') ============
     if (agentId === '8' && aiResponse.includes('[IMAGE:')) {
