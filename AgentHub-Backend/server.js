@@ -1343,7 +1343,10 @@ Yanıtı JSON formatında ver:
 2. Önceki adımın çıktısını kullanmak için "{{PREVIOUS_OUTPUT}}" kullan
 3. En verimli agent sırasını belirle
 4. Gereksiz adım ekleme
-5. JSON formatı bozuk olmamalı`;
+5. JSON formatı bozuk olmamalı
+6. "input" alanı HER ZAMAN STRING olmalı. Asla JSON objesi verme.
+7. {{PREVIOUS_OUTPUT}} bir metindir, obje değildir. Asla {{PREVIOUS_OUTPUT.country}} gibi şeyler kullanma.
+8. Eğer önceki adımdan bir bilgi lazımsa, string içinde belirt: "{{PREVIOUS_OUTPUT}} hakkında haber bul" gibi.`;
 
     // Fallback destekli plan oluştur
     const systemMessage = 'Sen bir görev planlayıcısısın. Sadece JSON formatında yanıt ver.';
