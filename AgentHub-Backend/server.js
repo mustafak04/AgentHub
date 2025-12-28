@@ -838,7 +838,15 @@ ${fromCurrency} → ${toCurrency}
           if (!podcasts.length) {
             aiResponse = `"${query}" için podcast bulunamadı. (Toplam: ${response.data.total || 0})`;
           } else {
-            let podcastList = `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
+            // ÖZET: Sadece podcast isimleri
+            let summary = `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
+            podcasts.slice(0, 5).forEach((podcast, index) => {
+              const title = podcast.title_original || podcast.title_highlighted || podcast.title || 'Başlık yok';
+              summary += `**${index + 1}. ${title}**\n`;
+            });
+
+            // DETAY: Tüm liste (Görselli ve açıklamalı)
+            let detail = `🎙️ **"${query}" için ${podcasts.length} podcast:**\n\n`;
 
             podcasts.slice(0, 5).forEach((podcast, index) => {
               const title = podcast.title_original || podcast.title_highlighted || podcast.title || 'Başlık yok';
@@ -846,16 +854,15 @@ ${fromCurrency} → ${toCurrency}
               const description = (podcast.description_original || podcast.description_highlighted || 'Açıklama yok').substring(0, 150);
               const thumbnail = podcast.thumbnail || podcast.image || '';
 
-              podcastList += `**${index + 1}. ${title}**\n`;
-              podcastList += `🎤 ${publisher}\n`;
-              podcastList += `📝 ${description}...\n`;
+              detail += `**${index + 1}. ${title}**\n`;
+              detail += `🎤 ${publisher}\n`;
+              detail += `📝 ${description}...\n`;
               if (thumbnail) {
-                podcastList += `![${title}](${thumbnail})\n`;
+                detail += `![${title}](${thumbnail})\n`;
               }
-              podcastList += `\n`;
+              detail += `\n`;
             });
-
-            aiResponse = podcastList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
 
           console.log('✅ Podcast sonuçları döndürüldü');
