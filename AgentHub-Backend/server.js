@@ -281,16 +281,21 @@ async function processAgentRequest(agentId, agentName, userMessage) {
               hour: '2-digit',
               minute: '2-digit'
             });
-            aiResponse = `
+            const summary = `
 💱 **GÜNCEL DÖVİZ KURU**
 ${fromCurrency} → ${toCurrency}
 **1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}**
+`.trim();
+
+            const detail = `
 📊 **Örnek Çevrimler:**
 • 10 ${fromCurrency} = ${(rate * 10).toFixed(2)} ${toCurrency}
 • 100 ${fromCurrency} = ${(rate * 100).toFixed(2)} ${toCurrency}
 • 1000 ${fromCurrency} = ${(rate * 1000).toFixed(2)} ${toCurrency}
 🕐 Son Güncelleme: ${lastUpdate}
-            `.trim();
+`.trim();
+
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
             console.log(`✅ Döviz kuru başarıyla alındı: 1 ${fromCurrency} = ${rate} ${toCurrency}`);
           } else {
             console.log('⚠️ Döviz kuru bulunamadı');
