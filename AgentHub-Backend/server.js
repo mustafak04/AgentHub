@@ -1431,12 +1431,20 @@ Yanıtı JSON formatında ver:
       try {
         const agentResponse = await processAgentRequest(agentId, step.agent, taskInput);
         if (agentResponse.success) {
-          previousOutput = agentResponse.response;
+          // Zincirleme işlem için context'i hazırla
+          // Eğer yanıt "Özet --- Detay" formatındaysa, sadece Detay kısmını context'e ekle (daha temiz input için)
+          const fullResponse = agentResponse.response;
+          if (fullResponse.includes('\n\n---\n\n')) {
+            previousOutput = fullResponse.split('\n\n---\n\n')[1];
+          } else {
+            previousOutput = fullResponse;
+          }
+
           stepResults.push({
             step: i + 1,
             agent: step.agent,
             task: step.task,
-            output: previousOutput
+            output: fullResponse // UI için tam yanıtı sakla
           });
         } else {
           stepResults.push({
