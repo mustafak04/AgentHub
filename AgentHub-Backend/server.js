@@ -1191,7 +1191,7 @@ ${fromCurrency} → ${toCurrency}
           if (!foundTeam || !teamMatches || teamMatches.length === 0) {
             aiResponse = `"${teamName}" takımı bulunamadı veya son maçları yok.`;
           } else {
-            const summary = `⚽ **${foundTeam.name} - Son ${teamMatches.length} Maç**\n\n`;
+            const summary = `⚽ **${foundTeam.shortName || foundTeam.name} - Son ${teamMatches.length} Maç**`;
 
             let detail = `⚽ **${foundTeam.name} - Son Maçlar:**\n\n`;
             teamMatches.slice(0, 5).forEach((fixture, i) => {
