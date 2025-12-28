@@ -1013,7 +1013,7 @@ ${fromCurrency} → ${toCurrency}
       const firstHeaderMatch = aiResponse.match(/\*\*(.*?)\*\*/);
       const firstHeader = firstHeaderMatch ? `\n\n**${firstHeaderMatch[1]}**` : '';
 
-      const summary = `🌟 **Motivasyon:**\n\n${firstParagraph}${firstHeader}...`;
+      const summary = `🌟 **Motivasyon:**\n\n${firstHeader}...`;
 
       // Detay zaten aiResponse'un kendisi
       aiResponse = `${summary}\n\n---\n\n${aiResponse}`;
