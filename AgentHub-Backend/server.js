@@ -470,7 +470,21 @@ ${fromCurrency} → ${toCurrency}
           if (!books || books.length === 0) {
             aiResponse = `"${searchQuery}" için kitap bulunamadı.`;
           } else {
-            let bookList = `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n`;
+            // 4. Formatlı liste oluştur
+            // ÖZET: Sadece ilk kitap, temel bilgiler (Başlık, Yazar, Sayfa, Puan, Link)
+            const firstBook = books[0];
+            const fVol = firstBook.volumeInfo;
+            const fTitle = fVol.title || 'Başlık yok';
+            const fAuthors = fVol.authors ? fVol.authors.join(', ') : 'Yazar bilinmiyor';
+            const fPage = fVol.pageCount || 'N/A';
+            const fRating = fVol.averageRating || 'N/A';
+            const fLink = fVol.previewLink || fVol.infoLink || '';
+
+            const summary = `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n**1. ${fTitle}**\n✍️ Yazar: ${fAuthors}\n📖 ${fPage} sayfa • ⭐ ${fRating}\n[🔗 Detaylar](${fLink})`;
+
+            // DETAY: Tüm kitaplar, full bilgi
+            let detail = `📚 **"${searchQuery}" için ${books.length} kitap bulundu:**\n\n`;
+
             books.forEach((book, index) => {
               const volumeInfo = book.volumeInfo;
               const title = volumeInfo.title || 'Başlık yok';
@@ -484,20 +498,21 @@ ${fromCurrency} → ${toCurrency}
                 : 'Açıklama yok';
               const thumbnail = volumeInfo.imageLinks?.thumbnail || '';
               const previewLink = volumeInfo.previewLink || volumeInfo.infoLink || '';
-              bookList += `**${index + 1}. ${title}**\n`;
-              bookList += `✍️ Yazar: ${authors}\n`;
-              bookList += `📖 ${pageCount} sayfa • ⭐ ${averageRating}\n`;
-              bookList += `📅 ${publisher} (${publishedDate})\n`;
-              bookList += `📝 ${description}\n`;
+
+              detail += `**${index + 1}. ${title}**\n`;
+              detail += `✍️ Yazar: ${authors}\n`;
+              detail += `📖 ${pageCount} sayfa • ⭐ ${averageRating}\n`;
+              detail += `📅 ${publisher} (${publishedDate})\n`;
+              detail += `📝 ${description}\n`;
               if (previewLink) {
-                bookList += `[🔗 Detaylar](${previewLink})\n`;
+                detail += `[🔗 Detaylar](${previewLink})\n`;
               }
               if (thumbnail) {
-                bookList += `![${title}](${thumbnail})\n`;
+                detail += `![${title}](${thumbnail})\n`;
               }
-              bookList += `\n`;
+              detail += `\n`;
             });
-            aiResponse = bookList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Kitap sonuçları döndürüldü');
         } catch (bookError) {
