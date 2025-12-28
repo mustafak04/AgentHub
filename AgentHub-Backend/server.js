@@ -173,30 +173,31 @@ async function processAgentRequest(agentId, agentName, userMessage) {
           Kullanıcıya haber kartlarını aşağıdaki veriyle sunmalısın. Yanıtı, kullanıcının mesajındaki dilde (code: ${language}) üret.
 
           YANIT FORMATI:
-          Önce bir ÖZET listesi oluştur (açıklama olmadan), sonra "---" ayırıcı koy, sonra DETAYLI listeyi oluştur (açıklama ile).
+          Sadece ve sadece aşağıdaki formatı kullan. Hiçbir giriş cümlesi (İşte haberler vb.) veya başlık (ÖZET KISMI vb.) yazma.
+          
+          [ÖZET LİSTESİ BURAYA]
+          ---
+          [DETAYLI LİSTE BURAYA]
 
-          1. ÖZET KISMI (Açıklama YOK):
-          Her haber için sadece:
+          1. ÖZET LİSTESİ FORMATI (Açıklama YOK):
           📰 [Sıra]. [Başlık]
           Kaynak: [Kaynak Adı] • Tarih: [Tarih]
-          🔗 [Link](URL)  <-- Linki mutlaka Markdown formatında yap!
-          (Araya boş satır koy)
+          🔗 [Link](URL)
+          (Boş satır)
 
-          ---
-
-          2. DETAYLI KISIM (Açıklama VAR):
-          Her haber için:
+          2. DETAYLI LİSTE FORMATI (Açıklama VAR):
           📰 [Sıra]. [Başlık]
           📝 [Açıklama]
           Kaynak: [Kaynak Adı] • Tarih: [Tarih]
-          🔗 [Link](URL) <-- Linki mutlaka Markdown formatında yap!
-          (Araya boş satır koy)
+          🔗 [Link](URL)
+          (Boş satır)
 
           KURALLAR:
-          - Tarihi, kullanıcının dilinde doğal biçimde yaz (örn: 26 Ekim 2025).
-          - 'Kaynak', 'Tarih' gibi kelimeleri kullanıcının diline çevir.
-          - Linkleri mutlaka [Link](URL) şeklinde Markdown yap ki tıklanabilsin.
-          - İki kısım arasında mutlaka tek başına bir "---" satırı olsun.
+          - "İşte haberler", "Özet Kısımı", "Detaylı Kısım" gibi başlıklar ASLA yazma.
+          - Direkt olarak ilk haberle başla.
+          - İki kısım arasında sadece "---" olsun.
+          - Tarihi doğal yaz (26 Ekim 2025).
+          - Linkleri Markdown yap: [Link](URL).
           
           Veri Listesi:
           [${rawList}]
@@ -204,6 +205,15 @@ async function processAgentRequest(agentId, agentName, userMessage) {
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await model.generateContent(formatPrompt);
             aiResponse = result.response.text();
+
+            // Temizlik (AI bazen inatçı olabilir)
+            aiResponse = aiResponse.replace(/İşte haber kartlarınız:?/gi, '')
+              .replace(/\*\*ÖZET KISMI\*\*/gi, '')
+              .replace(/\*\*DETAYLI KISIM\*\*/gi, '')
+              .replace(/ÖZET KISMI/gi, '')
+              .replace(/DETAYLI KISIM/gi, '')
+              .trim();
+
             console.log(`✅ ${articles.length} haber bulundu ve detaylı formatlandı`);
           }
         } catch (err) {
