@@ -395,7 +395,20 @@ ${fromCurrency} → ${toCurrency}
             });
 
             // 4. Formatlı liste oluştur
-            let videoList = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
+            // ÖZET: Sadece ilk video, görsel yok, link metni "Video"
+            const firstVideo = videos[0];
+            const fTitle = firstVideo.snippet.title;
+            const fChannel = firstVideo.snippet.channelTitle;
+            const fId = firstVideo.id.videoId;
+            const fUrl = `https://www.youtube.com/watch?v=${fId}`;
+            const fStats = statsMap[fId];
+            const fView = fStats ? formatNumber(fStats.viewCount) : 'N/A';
+            const fLike = fStats ? formatNumber(fStats.likeCount) : 'N/A';
+
+            const summary = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n**1. ${fTitle}**\n📺 ${fChannel} • 👁️ ${fView} • 👍 ${fLike}\n[🔗 Video](${fUrl})`;
+
+            // DETAY: Tüm videolar, görselli, link metni "Video"
+            let detail = `🎬 **"${searchQuery}" için ${videos.length} video bulundu:**\n\n`;
 
             videos.forEach((video, index) => {
               const title = video.snippet.title;
@@ -409,13 +422,13 @@ ${fromCurrency} → ${toCurrency}
               const viewCount = stats ? formatNumber(stats.viewCount) : 'N/A';
               const likeCount = stats ? formatNumber(stats.likeCount) : 'N/A';
 
-              videoList += `**${index + 1}. ${title}**\n`;
-              videoList += `📺 ${channelTitle} • 👁️ ${viewCount} • 👍 ${likeCount}\n`;
-              videoList += `[🔗 İzle](${videoUrl})\n`;
-              videoList += `![${title}](${thumbnail})\n\n`;
+              detail += `**${index + 1}. ${title}**\n`;
+              detail += `📺 ${channelTitle} • 👁️ ${viewCount} • 👍 ${likeCount}\n`;
+              detail += `[🔗 Video](${videoUrl})\n`;
+              detail += `![${title}](${thumbnail})\n\n`;
             });
 
-            aiResponse = videoList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ YouTube sonuçları döndürüldü');
         } catch (youtubeError) {
