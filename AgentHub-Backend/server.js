@@ -670,7 +670,25 @@ ${fromCurrency} → ${toCurrency}
             aiResponse = `"${query}" için sonuç bulunamadı.`;
           } else {
             const results = response.data.Search.slice(0, 5);
-            let movieList = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
+
+            // İlk film için detayları al (Özet için)
+            const firstItem = results[0];
+            const firstDetailRes = await axios.get('http://www.omdbapi.com/', {
+              params: {
+                apikey: OMDB_API_KEY,
+                i: firstItem.imdbID,
+                plot: 'short'
+              }
+            });
+            const fDetail = firstDetailRes.data;
+            const fTitle = fDetail.Title;
+            const fType = fDetail.Type === 'movie' ? '🎥 Film' : '📺 Dizi';
+            const fYear = fDetail.Year;
+            const fRating = fDetail.imdbRating !== 'N/A' ? fDetail.imdbRating : 'N/A';
+
+            const summary = `🎬 **"${query}" için ${results.length} sonuç:**\n\n**1. ${fTitle}** (${fYear})\n${fType} • ⭐ ${fRating}/10`;
+
+            let detail = `🎬 **"${query}" için ${results.length} sonuç:**\n\n`;
             let index = 0;
             for (const item of results) {
               index++;
@@ -682,24 +700,24 @@ ${fromCurrency} → ${toCurrency}
                   plot: 'short'
                 }
               });
-              const detail = detailRes.data;
+              const detailData = detailRes.data;
 
-              const title = detail.Title;
-              const type = detail.Type === 'movie' ? '🎥 Film' : '📺 Dizi';
-              const year = detail.Year;
-              const rating = detail.imdbRating !== 'N/A' ? detail.imdbRating : 'N/A';
-              const plot = detail.Plot !== 'N/A' ? detail.Plot : 'Açıklama yok';
-              const poster = detail.Poster !== 'N/A' ? detail.Poster : '';
+              const title = detailData.Title;
+              const type = detailData.Type === 'movie' ? '🎥 Film' : '📺 Dizi';
+              const year = detailData.Year;
+              const rating = detailData.imdbRating !== 'N/A' ? detailData.imdbRating : 'N/A';
+              const plot = detailData.Plot !== 'N/A' ? detailData.Plot : 'Açıklama yok';
+              const poster = detailData.Poster !== 'N/A' ? detailData.Poster : '';
 
-              movieList += `**${index}. ${title}** (${year})\n`;
-              movieList += `${type} • ⭐ ${rating}/10\n`;
-              movieList += `📝 ${plot}\n`;
+              detail += `**${index}. ${title}** (${year})\n`;
+              detail += `${type} • ⭐ ${rating}/10\n`;
+              detail += `📝 ${plot}\n`;
               if (poster) {
-                movieList += `![${title}](${poster})\n`;
+                detail += `![${title}](${poster})\n`;
               }
-              movieList += `\n`;
+              detail += `\n`;
             }
-            aiResponse = movieList;
+            aiResponse = `${summary}\n\n---\n\n${detail}`;
           }
           console.log('✅ Film/Dizi sonuçları döndürüldü');
         } catch (omdbError) {
