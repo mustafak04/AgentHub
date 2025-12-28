@@ -342,7 +342,7 @@ ${fromCurrency} → ${toCurrency}
           const summary = `![AI Generated Image](${imageUrl})`;
           const detail = `🎨 **Prompt:** ${prompt}`;
 
-          aiResponse = `${summary}\n\n---\n\n${detail}`;
+          aiResponse = `${summary}\n\n---\n\n${summary}\n\n${detail}`;
 
           console.log('✅ Görsel başarıyla oluşturuldu (Pollinations.AI)');
         } catch (imageError) {
