@@ -166,7 +166,7 @@ async function processAgentRequest(agentId, agentName, userMessage) {
       "açıklama": "${a.description || '-'}",
       "kaynak": "${a.source.name}",
       "tarih": "${a.publishedAt}",
-      "link": "${a.url}"
+      "link": "[${a.source.name}](${a.url})"
     }`
             ).join(',\n');
             const formatPrompt = `
