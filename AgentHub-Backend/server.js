@@ -101,19 +101,28 @@ async function processAgentRequest(agentId, agentName, userMessage) {
       console.log('✅ Hesap makinesi agentı yanıtı oluşturuldu.');
       // Gemini zaten hesaplama yaptı, aiResponse kullan
 
-      // Özet ve detay ayrımı yap
-      // Prompt formatı: "Adım Adım Çözüm: ... Sonuç: ..." veya sadece "Sonuç: ..."
-
-      const resultMatch = aiResponse.match(/Sonuç:\s*(.*)/i);
-      const stepsMatch = aiResponse.match(/Adım Adım Çözüm:([\s\S]*?)Sonuç:/i);
+      // Regex: "Sonuç" kelimesini ve olası ** işaretlerini esnek şekilde yakala
+      const resultMatch = aiResponse.match(/(?:\*\*|)?Sonuç(?:\*\*|)?:\s*(.*)/i);
+      const stepsMatch = aiResponse.match(/(?:\*\*|)?Adım Adım Çözüm(?:\*\*|)?:\s*([\s\S]*?)(?:\*\*|)?Sonuç/i);
 
       if (resultMatch && stepsMatch) {
-        const resultText = `Sonuç: ${resultMatch[1].trim()}`;
+        let resultValue = resultMatch[1].trim();
+        // Eğer sonuç ** ile bitiyorsa veya başlıyorsa temizle
+        resultValue = resultValue.replace(/^\*\*|\*\*$/g, '').trim();
+
+        // Eğer sonuç boşsa ve adımların sonunda bir sayı varsa onu almaya çalış (Fallback)
+        if (!resultValue && stepsMatch[1]) {
+          const lastNumberMatch = stepsMatch[1].match(/=\s*(\d+[\.,]?\d*)\s*(\*\*|)?\s*$/);
+          if (lastNumberMatch) {
+            resultValue = lastNumberMatch[1];
+          }
+        }
+
+        const resultText = `Sonuç: ${resultValue}`;
         const stepsText = `Adım Adım Çözüm:\n${stepsMatch[1].trim()}\n\n${resultText}`;
 
         aiResponse = `${resultText}\n\n---\n\n${stepsText}`;
       }
-      // Eğer sadece sonuç varsa veya format farklıysa olduğu gibi kalsın
     }
     // ============ ÇEVİRİ AGENT (agentId === '3') ============
     if (agentId === '3' && aiResponse.includes('[TRANSLATE:')) {
