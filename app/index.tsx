@@ -1,42 +1,34 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
-import { Alert, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import CustomAlert from '../components/CustomAlert';
 import { useTheme } from './context/ThemeContext';
 
 export default function HomeScreen() {
   const user = auth().currentUser;
   const { colors, isDark, toggleTheme } = useTheme();
+  const [logoutAlertVisible, setLogoutAlertVisible] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Çıkış Yap',
-      'Hesabından çıkmak istediğine emin misin?',
-      [
-        {
-          text: 'İptal',
-          style: 'cancel',
-        },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await auth().signOut();
-              // @ts-ignore
-              router.replace('/login');
-            } catch (error) {
-              console.error('Çıkış hatası:', error);
-              Alert.alert('Hata', 'Çıkış yapılamadı');
-            }
-          },
-        },
-      ]
-    );
+    setLogoutAlertVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      await auth().signOut();
+      // @ts-ignore
+      router.replace('/login');
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+      Alert.alert('Hata', 'Çıkış yapılamadı');
+    }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F7FAFC' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#EDF2F7' }]}>
       {/* Modern Header */}
       <View style={[styles.userCard, {
         backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#FFFFFF',
@@ -47,7 +39,11 @@ export default function HomeScreen() {
           <View style={[styles.profileIcon, {
             backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(59, 130, 246, 0.2)',
           }]}>
-            <Text style={styles.profileEmoji}>👤</Text>
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              size={36}
+              color={isDark ? '#06B6D4' : '#3B82F6'}
+            />
           </View>
           <View style={styles.welcomeContainer}>
             <Text style={[styles.welcomeText, {
@@ -73,7 +69,11 @@ export default function HomeScreen() {
             ]}
             onPress={toggleTheme}
           >
-            <Text style={styles.headerButtonIcon}>{isDark ? '☀️' : '🌙'}</Text>
+            <MaterialCommunityIcons
+              name={isDark ? 'white-balance-sunny' : 'weather-night'}
+              size={26}
+              color={isDark ? '#FCD34D' : '#6B7280'}
+            />
           </Pressable>
 
           {/* Logout Button - EKLE */}
@@ -87,14 +87,25 @@ export default function HomeScreen() {
             ]}
             onPress={handleLogout}
           >
-            <Text style={styles.headerButtonIcon}>🚪</Text>
+            <MaterialCommunityIcons
+              name="logout-variant"
+              size={26}
+              color={isDark ? '#F87171' : '#6B7280'}
+            />
           </Pressable>
         </View>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>🤖 AgentHub</Text>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/images/robot_mascot.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: colors.text }]}>AgentHub</Text>
+        </View>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Çok Ajanlı Yapay Zeka Destekli Mobil Asistan</Text>
 
         <View style={styles.cardContainer}>
@@ -117,15 +128,17 @@ export default function HomeScreen() {
                       }
                     ]}>
                       <View style={styles.cardContent}>
-                        <View>
-                          <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
-                            Bireysel Mod
-                          </Text>
-                          <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.6)' }]}>
-                            Tek bir agent ile sohbet et
-                          </Text>
-                        </View>
-                        <Text style={styles.cardIcon}>🤖</Text>
+                        <MaterialCommunityIcons
+                          name="robot-outline"
+                          size={70}
+                          color="rgba(255, 255, 255, 0.9)"
+                        />
+                        <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
+                          Bireysel Mod
+                        </Text>
+                        <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.6)' }]}>
+                          Tek bir agent ile sohbet et
+                        </Text>
                       </View>
                     </View>
                   ) : (
@@ -137,15 +150,17 @@ export default function HomeScreen() {
                       style={styles.glassCard}
                     >
                       <View style={styles.cardContent}>
-                        <View>
-                          <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
-                            Bireysel Mod
-                          </Text>
-                          <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.9)' }]}>
-                            Tek bir agent ile sohbet et
-                          </Text>
-                        </View>
-                        <Text style={styles.cardIcon}>🤖</Text>
+                        <MaterialCommunityIcons
+                          name="robot-outline"
+                          size={70}
+                          color="rgba(255, 255, 255, 0.9)"
+                        />
+                        <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
+                          Bireysel Mod
+                        </Text>
+                        <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+                          Tek bir agent ile sohbet et
+                        </Text>
                       </View>
                     </LinearGradient>
                   )}
@@ -173,15 +188,17 @@ export default function HomeScreen() {
                       }
                     ]}>
                       <View style={styles.cardContent}>
-                        <View>
-                          <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
-                            Koordine Mod
-                          </Text>
-                          <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.6)' }]}>
-                            Birden fazla agent koordine et
-                          </Text>
-                        </View>
-                        <Text style={styles.cardIcon}>🤝</Text>
+                        <MaterialCommunityIcons
+                          name="hub-outline"
+                          size={70}
+                          color="rgba(255, 255, 255, 0.9)"
+                        />
+                        <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
+                          Koordine Mod
+                        </Text>
+                        <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.6)' }]}>
+                          Birden fazla agent koordine et
+                        </Text>
                       </View>
                     </View>
                   ) : (
@@ -193,15 +210,17 @@ export default function HomeScreen() {
                       style={styles.glassCard}
                     >
                       <View style={styles.cardContent}>
-                        <View>
-                          <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
-                            Koordine Mod
-                          </Text>
-                          <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.9)' }]}>
-                            Birden fazla agent koordine et
-                          </Text>
-                        </View>
-                        <Text style={styles.cardIcon}>🤝</Text>
+                        <MaterialCommunityIcons
+                          name="hub-outline"
+                          size={70}
+                          color="rgba(255, 255, 255, 0.9)"
+                        />
+                        <Text style={[styles.cardTitle, { color: '#FFFFFF' }]}>
+                          Koordine Mod
+                        </Text>
+                        <Text style={[styles.cardDescription, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+                          Birden fazla agent koordine et
+                        </Text>
                       </View>
                     </LinearGradient>
                   )}
@@ -211,6 +230,26 @@ export default function HomeScreen() {
           </Link>
         </View>
       </View>
+
+      {/* Custom Logout Alert */}
+      <CustomAlert
+        visible={logoutAlertVisible}
+        title="Çıkış Yap"
+        message="Hesabından çıkmak istediğine emin misin?"
+        isDark={isDark}
+        onClose={() => setLogoutAlertVisible(false)}
+        buttons={[
+          {
+            text: 'İptal',
+            style: 'cancel',
+          },
+          {
+            text: 'Çıkış Yap',
+            style: 'destructive',
+            onPress: confirmLogout,
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -274,8 +313,19 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 30,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
+    marginRight: 2,
+  },
   title: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
@@ -294,20 +344,23 @@ const styles = StyleSheet.create({
     minHeight: 220,
   },
   cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   cardIcon: {
     fontSize: 70,
   },
   cardTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
+    marginTop: 16,
     marginBottom: 8,
+    textAlign: 'center',
   },
   cardDescription: {
     fontSize: 15,
     lineHeight: 22,
+    textAlign: 'center',
   },
 });

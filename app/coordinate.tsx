@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from "axios";
 import { router } from 'expo-router';
 import { useEffect, useState } from "react";
@@ -203,7 +204,11 @@ export default function Coordinate() {
         <View style={styles.aiMessageRow}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarIcon}>🤖</Text>
+            <Image
+              source={require('../assets/images/robot_mascot.png')}
+              style={{ width: 48, height: 48 }}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Message Bubble */}
@@ -249,7 +254,7 @@ export default function Coordinate() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, {
-        backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
+        backgroundColor: isDark ? '#0F172A' : '#EDF2F7'
       }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
@@ -274,9 +279,17 @@ export default function Coordinate() {
         </TouchableOpacity>
         {/* Agent Info (Orta) */}
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: isDark ? '#FFF' : '#1F2937' }]}>
-            🤝 Koordine Mod
-          </Text>
+          <View style={styles.headerTitleContainer}>
+            <MaterialCommunityIcons
+              name="hub-outline"
+              size={22}
+              color={isDark ? '#10B981' : '#10B981'}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={[styles.headerTitle, { color: isDark ? '#FFF' : '#1F2937' }]}>
+              Koordine Mod
+            </Text>
+          </View>
         </View>
         {/* Temizle Butonu (Sağ) */}
         <TouchableOpacity
@@ -391,6 +404,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   clearButton: {
     paddingHorizontal: 14,

@@ -2,7 +2,8 @@ import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import CustomAlert from '../components/CustomAlert';
 import { useTheme } from './context/ThemeContext';
 
 export default function LoginScreen() {
@@ -12,14 +13,29 @@ export default function LoginScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  // Alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('error');
+  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' = 'error', callback?: () => void) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertCallback(() => callback || null);
+    setAlertVisible(true);
+  };
+
   const handleAuth = async () => {
     if (!email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showAlert('Hata', 'Lütfen tüm alanları doldurun', 'error');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Hata', 'Şifre en az 6 karakter olmalı');
+      showAlert('Hata', 'Şifre en az 6 karakter olmalı', 'error');
       return;
     }
 
@@ -28,15 +44,17 @@ export default function LoginScreen() {
       if (isLogin) {
         // Giriş
         await auth().signInWithEmailAndPassword(email, password);
-        Alert.alert('Başarılı', 'Giriş yapıldı!');
-        // @ts-ignore
-        router.replace('/');
+        showAlert('Başarılı', 'Giriş yapıldı!', 'success', () => {
+          // @ts-ignore
+          router.replace('/');
+        });
       } else {
         // Kayıt
         await auth().createUserWithEmailAndPassword(email, password);
-        Alert.alert('Başarılı', 'Hesap oluşturuldu!');
-        // @ts-ignore
-        router.replace('/');
+        showAlert('Başarılı', 'Hesap oluşturuldu!', 'success', () => {
+          // @ts-ignore
+          router.replace('/');
+        });
       }
     } catch (error: any) {
       console.error('Auth hatası:', error);
@@ -58,7 +76,7 @@ export default function LoginScreen() {
         errorMessage = 'İnternet bağlantınızı kontrol edin';
       }
 
-      Alert.alert('Hata', errorMessage);
+      showAlert('Hata', errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -67,7 +85,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, {
-        backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
+        backgroundColor: isDark ? '#0F172A' : '#EDF2F7'
       }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -83,18 +101,18 @@ export default function LoginScreen() {
             }]}
             onPress={toggleTheme}
           >
-            <Text style={styles.themeIcon}>{isDark ? '☀️' : '🌙'}</Text>
-          </TouchableOpacity>
-          {/* Logo */}
-          <View style={[styles.logoContainer, {
-            backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-          }]}>
             <MaterialCommunityIcons
-              name="robot-happy"
-              size={48}
-              color={isDark ? '#06B6D4' : '#3B82F6'}
+              name={isDark ? 'white-balance-sunny' : 'weather-night'}
+              size={26}
+              color={isDark ? '#FCD34D' : '#6B7280'}
             />
-          </View>
+          </TouchableOpacity>
+          {/* Mascot Logo */}
+          <Image
+            source={require('../assets/images/robot_mascot.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
           <Text style={[styles.title, {
             color: isDark ? '#FFFFFF' : '#1F2937'
           }]}>
@@ -108,43 +126,57 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+          {/* Email Input with Icon */}
+          <View style={[styles.inputContainer, {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#D1D5DB',
+          }]}>
+            <MaterialCommunityIcons
+              name="email-outline"
+              size={22}
+              color={isDark ? 'rgba(255, 255, 255, 0.5)' : '#9CA3AF'}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, {
                 color: isDark ? '#FFFFFF' : '#1F2937',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#D1D5DB',
-              }
-            ]}
-            placeholder="Email"
-            placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoCorrect={false}
-            editable={!loading}
-          />
+              }]}
+              placeholder="Email"
+              placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
 
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+          {/* Password Input with Icon */}
+          <View style={[styles.inputContainer, {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#D1D5DB',
+          }]}>
+            <MaterialCommunityIcons
+              name="lock-outline"
+              size={22}
+              color={isDark ? 'rgba(255, 255, 255, 0.5)' : '#9CA3AF'}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, {
                 color: isDark ? '#FFFFFF' : '#1F2937',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#D1D5DB',
-              }
-            ]}
-            placeholder="Password"
-            placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!loading}
-          />
+              }]}
+              placeholder="Password"
+              placeholderTextColor={isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF'}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
 
           <TouchableOpacity
             style={[
@@ -189,7 +221,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* GitHub Link - BURAYA EKLE */}
+        {/* GitHub Link */}
         <TouchableOpacity
           style={styles.githubContainer}
           onPress={() => Linking.openURL('https://github.com/mustafak04')}
@@ -210,7 +242,32 @@ export default function LoginScreen() {
               color={isDark ? '#06B6D4' : '#1F2937'}
             />
           </View>
+          <Text style={[styles.developerCredit, {
+            color: isDark ? 'rgba(255, 255, 255, 0.4)' : '#9CA3AF',
+          }]}>
+            github.com/mustafak04
+          </Text>
         </TouchableOpacity>
+
+        {/* Custom Alert */}
+        <CustomAlert
+          visible={alertVisible}
+          title={alertTitle}
+          message={alertMessage}
+          isDark={isDark}
+          onClose={() => {
+            setAlertVisible(false);
+            if (alertCallback) {
+              alertCallback();
+            }
+          }}
+          buttons={[
+            {
+              text: 'Tamam',
+              style: alertType === 'success' ? 'default' : 'destructive',
+            },
+          ]}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -248,12 +305,21 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
-  input: {
-    padding: 16,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 12,
     marginBottom: 16,
-    fontSize: 16,
     borderWidth: 1,
+    paddingHorizontal: 14,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
   },
   button: {
     padding: 16,
@@ -285,6 +351,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
+  developerCredit: {
+    marginTop: 8,
+    fontSize: 12,
+  },
   themeToggle: {
     alignSelf: 'center',
     marginBottom: 20,
@@ -294,7 +364,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  themeIcon: {
-    fontSize: 22,
+  mascotImage: {
+    width: 140,
+    height: 140,
+    marginBottom: 2,
   },
 });

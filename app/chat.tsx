@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
@@ -9,6 +10,34 @@ import { useTheme } from './context/ThemeContext';
 
 // Backend URL'si
 const BACKEND_URL = "https://agenthub-phi.vercel.app";
+
+// Agent icon mapping
+const agentIcons: { [key: string]: { icon: string; color: string } } = {
+  '1': { icon: 'weather-partly-cloudy', color: '#FF9500' },
+  '2': { icon: 'calculator', color: '#5856D6' },
+  '3': { icon: 'translate', color: '#32ADE6' },
+  '4': { icon: 'newspaper-variant-outline', color: '#FF2D55' },
+  '5': { icon: 'wikipedia', color: '#9013FE' },
+  '6': { icon: 'currency-usd', color: '#FF9500' },
+  '7': { icon: 'code-tags', color: '#34C759' },
+  '8': { icon: 'palette-outline', color: '#FF6B6B' },
+  '9': { icon: 'youtube', color: '#FF0000' },
+  '10': { icon: 'library-shelves', color: '#8E44AD' },
+  '11': { icon: 'text-box-check-outline', color: '#3498DB' },
+  '12': { icon: 'book-alphabet', color: '#E74C3C' },
+  '13': { icon: 'filmstrip', color: '#F39C12' },
+  '14': { icon: 'music-note', color: '#9B59B6' },
+  '15': { icon: 'microphone-variant', color: '#E67E22' },
+  '16': { icon: 'controller-classic-outline', color: '#16A085' },
+  '17': { icon: 'silverware-fork-knife', color: '#E74C3C' },
+  '18': { icon: 'weight-lifter', color: '#27AE60' },
+  '19': { icon: 'auto-fix', color: '#F39C12' },
+  '20': { icon: 'qrcode-scan', color: '#34495E' },
+  '21': { icon: 'ip-network-outline', color: '#2C3E50' },
+  '22': { icon: 'dice-multiple-outline', color: '#8E44AD' },
+  '23': { icon: 'bitcoin', color: '#F7931A' },
+  '24': { icon: 'soccer', color: '#27AE60' },
+};
 
 export default function Chat() {
   const { colors, isDark } = useTheme();
@@ -184,8 +213,14 @@ export default function Chat() {
       return (
         <View style={styles.aiMessageRow}>
           {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            <Image source={require('../assets/images/robot_mascot.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+          <View style={[styles.avatarContainer, {
+            backgroundColor: agentIcons[agentId as string]?.color + '20' || '#3B82F620'
+          }]}>
+            <MaterialCommunityIcons
+              name={(agentIcons[agentId as string]?.icon || 'robot') as any}
+              size={24}
+              color={agentIcons[agentId as string]?.color || '#3B82F6'}
+            />
           </View>
           {/* Message Bubble */}
           <TouchableOpacity
@@ -236,7 +271,7 @@ export default function Chat() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, {
-        backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
+        backgroundColor: isDark ? '#0F172A' : '#EDF2F7'
       }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
