@@ -70,19 +70,7 @@ export default function Individual() {
 
   const renderAgentCard = ({ item }: { item: typeof agents[0] }) => (
     <TouchableOpacity
-      style={[
-        styles.card,
-        {
-          backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : '#FFFFFF',
-          borderWidth: isDark ? 2 : 1,
-          borderColor: isDark ? '#06B6D4' : 'rgba(0, 0, 0, 0.05)',
-          shadowColor: isDark ? '#06B6D4' : '#000',
-          shadowOffset: { width: 0, height: isDark ? 0 : 2 },
-          shadowOpacity: isDark ? 0.3 : 0.08,
-          shadowRadius: isDark ? 8 : 4,
-          elevation: isDark ? 0 : 2,
-        }
-      ]}
+      style={styles.card}
       onPress={() => {
         router.push(`/chat?agentId=${item.id}&agentName=${item.name}`);
       }}
@@ -90,25 +78,15 @@ export default function Individual() {
       <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
         <MaterialCommunityIcons
           name={item.icon as any}
-          size={28}
+          size={32}
           color={item.color}
         />
       </View>
-      <View style={styles.textContainer}>
-        <Text style={[styles.agentName, {
-          color: isDark ? '#FFFFFF' : '#1F2937',
-          fontWeight: '600',
-          fontSize: 15,
-        }]}>
-          {item.name}
-        </Text>
-        <Text style={[styles.agentDescription, {
-          color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
-          fontSize: 12,
-        }]} numberOfLines={2}>
-          {item.description}
-        </Text>
-      </View>
+      <Text style={[styles.agentName, {
+        color: isDark ? '#FFFFFF' : '#1F2937',
+      }]} numberOfLines={2}>
+        {item.name.replace(' Agent', '')}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -116,20 +94,38 @@ export default function Individual() {
     <View style={[styles.container, {
       backgroundColor: isDark ? '#0F172A' : '#EDF2F7'
     }]}>
-      <Text style={[styles.title, {
-        color: isDark ? '#FFFFFF' : '#1F2937',
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 4,
+      {/* Header */}
+      <View style={[styles.headerContainer, {
+        borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
       }]}>
-        Agent Listesi
-      </Text>
-      <Text style={[styles.subtitle, {
-        color: isDark ? 'rgba(255, 255, 255, 0.6)' : '#6B7280',
-        fontSize: 14,
-      }]}>
-        {filteredAgents.length} Agent
-      </Text>
+        {/* Geri Butonu */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={[styles.backButton, {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          }]}
+        >
+          <Text style={[styles.backIcon, { color: isDark ? '#FFF' : '#000' }]}>‹</Text>
+        </TouchableOpacity>
+
+        {/* Başlık (Orta) */}
+        <Text style={[styles.title, {
+          color: isDark ? '#FFFFFF' : '#1F2937',
+        }]}>
+          Agent Listesi
+        </Text>
+
+        {/* Agent Sayısı (Sağ) */}
+        <View style={[styles.agentCountBadge, {
+          backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+        }]}>
+          <Text style={[styles.agentCountText, {
+            color: isDark ? '#06B6D4' : '#3B82F6',
+          }]}>
+            {filteredAgents.length}
+          </Text>
+        </View>
+      </View>
 
       {/* Arama Çubuğu - CSS Glassmorphism */}
       <View style={[
@@ -213,12 +209,12 @@ export default function Individual() {
         })}
       </ScrollView>
 
-      {/* Agent Listesi */}
+      {/* Agent Listesi - 4 Column Grid */}
       <FlatList
         data={filteredAgents}
         renderItem={renderAgentCard}
         keyExtractor={(item) => item.id}
-        numColumns={2}  // 2-column grid
+        numColumns={4}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -233,12 +229,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
   },
-  title: {
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  subtitle: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 20,
     marginBottom: 16,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    fontSize: 28,
+    fontWeight: '300',
+    marginTop: -2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  agentCountBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  agentCountText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -290,35 +312,27 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   row: {
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    justifyContent: 'flex-start',
+    marginBottom: 20,
+    gap: 16,
   },
   card: {
-    flex: 1,
-    maxWidth: '48%',
-    borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 4,
+    width: '22%',
+    alignItems: 'center',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 10,
-  },
-  textContainer: {
-    alignItems: 'center',
+    marginBottom: 8,
   },
   agentName: {
-    marginBottom: 4,
+    fontSize: 11,
+    fontWeight: '600',
     textAlign: 'center',
-  },
-  agentDescription: {
-    textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 14,
   },
   searchIconStyle: {
     marginRight: 10,
