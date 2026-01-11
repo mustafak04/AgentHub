@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
+
+const THEME_STORAGE_KEY = '@app_theme';
 
 interface ThemeContextType {
     theme: Theme;
@@ -44,9 +47,33 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light');
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    const toggleTheme = () => {
-        setTheme(theme === 'light' ? 'dark' : 'light');
+    // Uygulama açılışında kaydedilmiş temayı yükle
+    useEffect(() => {
+        const loadTheme = async () => {
+            try {
+                const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    setTheme(savedTheme);
+                }
+            } catch (error) {
+                console.error('Tema yüklenirken hata:', error);
+            } finally {
+                setIsLoaded(true);
+            }
+        };
+        loadTheme();
+    }, []);
+
+    const toggleTheme = async () => {
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        try {
+            await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
+        } catch (error) {
+            console.error('Tema kaydedilirken hata:', error);
+        }
     };
 
     const value: ThemeContextType = {
@@ -55,6 +82,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         toggleTheme,
         colors: theme === 'dark' ? darkColors : lightColors,
     };
+
+    // Tema yüklenene kadar bekle (flash önleme)
+    if (!isLoaded) {
+        return null;
+    }
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
