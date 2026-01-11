@@ -1,7 +1,7 @@
 import axios from "axios";
 import { router } from 'expo-router';
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
 import { useTheme } from './context/ThemeContext';
@@ -36,6 +36,22 @@ export default function Coordinate() {
       paddingVertical: 2,
       borderRadius: 4,
       fontFamily: 'monospace',
+    },
+  };
+
+  // Custom markdown rules to fix image key prop error
+  const markdownRules = {
+    image: (node: any, children: any, parent: any, styles: any) => {
+      const { src, alt } = node.attributes;
+      return (
+        <Image
+          key={node.key}
+          source={{ uri: src }}
+          style={{ width: '100%', height: 200, borderRadius: 8, marginVertical: 8 }}
+          resizeMode="contain"
+          accessibilityLabel={alt || 'Image'}
+        />
+      );
     },
   };
 
@@ -211,6 +227,7 @@ export default function Coordinate() {
           >
             <Markdown
               style={markdownStyles}
+              rules={markdownRules}
               onLinkPress={(url) => {
                 Linking.openURL(url).catch(err => console.error("Link açılamadı:", err));
                 return false;
@@ -234,8 +251,8 @@ export default function Coordinate() {
       style={[styles.container, {
         backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
       }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={90}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       {/* Modern Header */}
       <View style={[

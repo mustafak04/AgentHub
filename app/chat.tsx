@@ -25,6 +25,22 @@ export default function Chat() {
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const chatId = agentId as string; // Chat ID = agent ID
 
+  // Custom markdown rules to fix image key prop error
+  const markdownRules = {
+    image: (node: any, children: any, parent: any, styles: any) => {
+      const { src, alt } = node.attributes;
+      return (
+        <Image
+          key={node.key}
+          source={{ uri: src }}
+          style={{ width: '100%', height: 200, borderRadius: 8, marginVertical: 8 }}
+          resizeMode="contain"
+          accessibilityLabel={alt || 'Image'}
+        />
+      );
+    },
+  };
+
   // Uygulama açıldığında sohbet geçmişini yükle ve gerçek zamanlı listener kur
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -199,6 +215,7 @@ export default function Chat() {
               strong: { fontWeight: 'bold' },
               em: { fontStyle: 'italic' },
             }}
+              rules={markdownRules}
               onLinkPress={(url) => {
                 Linking.openURL(url).catch(err => console.error("Link açılamadı:", err));
                 return false;
@@ -221,8 +238,8 @@ export default function Chat() {
       style={[styles.container, {
         backgroundColor: isDark ? '#0F172A' : '#F7FAFC'
       }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={90}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       {/* Modern Header */}
       <View style={[
