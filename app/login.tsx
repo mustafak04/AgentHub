@@ -4,8 +4,8 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CustomAlert from '../components/CustomAlert';
+import { isValidEmail } from '../utils/validation';
 import { useTheme } from './context/ThemeContext';
-
 export default function LoginScreen() {
   const { isDark, toggleTheme } = useTheme();
   const [email, setEmail] = useState('');
@@ -31,6 +31,12 @@ export default function LoginScreen() {
   const handleAuth = async () => {
     if (!email || !password) {
       showAlert('Hata', 'Lütfen tüm alanları doldurun', 'error');
+      return;
+    }
+
+    // Email format validation (client-side - Firebase'e gitmeden)
+    if (!isValidEmail(email)) {
+      showAlert('Hata', 'Geçerli bir email adresi girin', 'error');
       return;
     }
 

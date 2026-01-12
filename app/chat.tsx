@@ -2,10 +2,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Markdown from 'react-native-markdown-display';
 import { clearChatHistory as clearFirestoreChatHistory, loadChatHistory, saveChatMessage, subscribeToChatUpdates } from '../services/chatService';
+import { validateMessage } from '../utils/validation';
 import { useTheme } from './context/ThemeContext';
 
 // Backend URL'si
@@ -124,10 +125,34 @@ export default function Chat() {
     }
   };
 
+  // Rate limiting için ref
+  const lastSentTimeRef = useRef<number>(0);
+  const RATE_LIMIT_MS = 500;
+  const MAX_MESSAGE_LENGTH = 2000;
+
   // Mesaj gönderme fonksiyonu
   const sendMessage = async () => {
-    if (inputText.trim() === "") return; // Boş mesaj gönderme
+    // Rate limiting kontrolü
+    const now = Date.now();
+    if (now - lastSentTimeRef.current < RATE_LIMIT_MS) {
+      return; // Çok hızlı gönderim engelle
+    }
 
+    // Mesaj validasyonu
+    const validation = validateMessage(inputText, MAX_MESSAGE_LENGTH);
+    if (!validation.valid) {
+      Alert.alert('Hata', validation.message || 'Geçersiz mesaj');
+      return;
+    }
+
+    // Auth kontrolü
+    if (!auth().currentUser) {
+      Alert.alert('Oturum Hatası', 'Lütfen tekrar giriş yapın');
+      router.replace('/login');
+      return;
+    }
+
+    lastSentTimeRef.current = now;
     const currentInput = inputText;
     setInputText(""); // Input'u hemen temizle
     setLoading(true); // Yükleniyor göster
